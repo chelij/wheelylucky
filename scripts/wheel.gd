@@ -112,7 +112,7 @@ func _draw():
 	var rect = get_rect()
 	var center = rect.position + rect.size / 2.0
 	# Fixed radius leaves room for labels and button inside the Control rect
-	var radius = min(rect.size.x, rect.size.y) * 0.38
+	var radius = 155.0  # matches scene layout: circle top at y~85
 
 	if wheel_outcomes.size() == 0 or radius <= 0:
 		return
