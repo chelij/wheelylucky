@@ -45,7 +45,7 @@ layout_mode = 1
 anchors_preset = 7
 anchor_right = 1.0
 offset_top = 36.0
-offset_bottom = 68.0
+offset_bottom = 76.0
 theme_override_constants/separation = 4
 alignment = 1
 
@@ -67,8 +67,8 @@ offset_bottom = 240.0
 script = ExtResource("1_wheel")
 
 [node name="PointerArrow" type="Polygon2D" parent="Wheel"]
-position = Vector2(0, -125)
-polygon = PackedVector2Array(0, 16, -14, -16, 14, -16)
+position = Vector2(160, 105)
+polygon = PackedVector2Array(0, 0, -12, -20, 12, -20)
 color = Color(1, 0.85, 0, 1)
 
 [node name="CycleLabel" type="Label" parent="Wheel"]

@@ -109,9 +109,8 @@ func _on_wheel_changed(wheel_num: int):
 
 func _draw():
 	var wheel_outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
-	var rect = get_rect()
-	var center = rect.position + rect.size / 2.0
-	# Fixed radius: 115px, circle fits inside 300x300 Wheel rect
+	var center = size / 2.0
+	# Fixed radius: 115px, circle fits inside Wheel Control.
 	var radius = 115.0
 
 	if wheel_outcomes.size() == 0 or radius <= 0:
