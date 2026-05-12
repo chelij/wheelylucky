@@ -79,9 +79,6 @@ func _show_floating_result(delta: int, color: Color):
 	label.size = Vector2(100, 30)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var font = DynamicFont.new()
-	font.size = 18
-	label.add_theme_font_override("font", font)
 	label.add_theme_color_override("font_color", color)
 	
 	if delta > 0:
