@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cfl7tvhu6wbum"]
 
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://77roqdija0nn" path="res://scripts/wheel.gd" id="1_wheel"]
 
 [node name="Main" type="Control"]
@@ -7,6 +8,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+script = ExtResource("1_main")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
