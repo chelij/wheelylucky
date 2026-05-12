@@ -22,10 +22,10 @@ var base_spin_duration: float = 2.5
 
 func _ready():
 	Game.coins_changed.connect(_on_coins_changed)
-	Game.wheel_changed.connect(_on_wheel_changed)
+	Game.selected_wheel_changed.connect(_on_wheel_changed)
 	spin_button.pressed.connect(_on_spin_pressed)
 
-	_on_wheel_changed(Game.current_wheel)
+	_on_wheel_changed(Game.selected_wheel)
 	_on_coins_changed(Game.coins)
 	queue_redraw()
 
@@ -51,7 +51,7 @@ func get_effective_spin_duration() -> float:
 func _on_spin_pressed():
 	if is_spinning:
 		return
-	if not Game.can_afford_wheel(Game.current_wheel):
+	if not Game.can_afford_wheel(Game.selected_wheel):
 		return
 	start_spin()
 
@@ -60,7 +60,7 @@ func start_spin():
 	spin_button.disabled = true
 	spin_start_time = Time.get_ticks_msec() / 1000.0
 
-	var outcomes = WheelConfig.get_outcomes(Game.current_wheel)
+	var outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
 	outcomes = WheelConfig.apply_skill_modifiers(outcomes, Game)
 
 	var chosen = WheelConfig.weighted_random(outcomes)
@@ -76,7 +76,7 @@ func start_spin():
 		var jitter = randf_range(-segment_angle * 0.3, segment_angle * 0.3)
 		var target_segment = segment_center + jitter
 		var full_rotations = randi_range(3, 5) * 360
-		target_rotation = full_rotations + (360 - target_segment + 270) % 360
+		target_rotation = full_rotations + fmod(360 - target_segment + 270, 360)
 	else:
 		target_rotation = randi_range(3, 5) * 360
 
@@ -97,18 +97,18 @@ func _on_spin_finished(result):
 
 func _on_coins_changed(total: int):
 	coins_label.text = str(total)
-	spin_button.disabled = not Game.can_afford_wheel(Game.current_wheel) or is_spinning
+	spin_button.disabled = not Game.can_afford_wheel(Game.selected_wheel) or is_spinning
 
 func _on_wheel_changed(wheel_num: int):
 	wheel_number_label.text = "Wheel " + str(wheel_num) + " / 10"
 	cycle_label.text = "Cycle " + str(Game.cycle_count)
 	var cost = Game.get_wheel_cost(wheel_num)
 	cost_label.text = "FREE" if cost == 0 else "Cost: " + str(cost)
-	spin_button.disabled = not Game.can_afford_wheel(wheel_num)
+	spin_button.disabled = not Game.can_afford_wheel(wheel_num) or is_spinning
 	queue_redraw()
 
 func _draw():
-	var wheel_outcomes = WheelConfig.get_outcomes(Game.current_wheel)
+	var wheel_outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
 	var rect = get_rect()
 	var center = rect.position + rect.size / 2.0
 	var radius = min(rect.size.x, rect.size.y) / 2.0 - 8.0

@@ -5,11 +5,11 @@ const WheelConfig = preload("res://scripts/wheel_config.gd")
 
 signal coins_changed(new_total)
 signal wheel_changed(current_wheel)
+signal selected_wheel_changed(selected_wheel)
 signal spin_completed
 signal shop_requested
 signal game_ended(final_coins)
 
-# Outcome indices (mirrors WheelConfig)
 const IDX_LABEL = 0
 const IDX_OP = 1
 const IDX_VALUE = 2
@@ -21,7 +21,9 @@ var coins: int = 0:
 		coins = max(0, value)
 		coins_changed.emit(coins)
 
-var current_wheel: int = 1
+# highest_unlocked tracks the highest wheel the player has reached (and spun)
+var highest_unlocked: int = 1
+var selected_wheel: int = 1
 var total_spins: int = 0
 var cycle_count: int = 1
 const MAX_WHEELS: int = 10
@@ -40,7 +42,8 @@ func _ready():
 
 func reset_run():
 	coins = 0
-	current_wheel = 1
+	highest_unlocked = 1
+	selected_wheel = 1
 	total_spins = 0
 	cycle_count = 1
 	skill_levels = {
@@ -54,7 +57,8 @@ func reset_run():
 	fortune_used = false
 	second_wind_used = false
 	coins_changed.emit(coins)
-	wheel_changed.emit(current_wheel)
+	wheel_changed.emit(selected_wheel)
+	selected_wheel_changed.emit(selected_wheel)
 
 func get_wheel_cost(wheel_num: int) -> int:
 	return WheelConfig.get_cost(wheel_num)
@@ -65,16 +69,36 @@ func can_afford_wheel(wheel_num: int) -> bool:
 		return true
 	return coins >= cost
 
+func is_wheel_unlocked(wheel_num: int) -> bool:
+	return wheel_num <= highest_unlocked
+
+func select_wheel(wheel_num: int):
+	if wheel_num < 1 or wheel_num > MAX_WHEELS:
+		return
+	if not is_wheel_unlocked(wheel_num):
+		return
+	selected_wheel = wheel_num
+	selected_wheel_changed.emit(selected_wheel)
+	wheel_changed.emit(selected_wheel)
+
 func spin_wheel():
-	var cost = get_wheel_cost(current_wheel)
+	var wheel_num = selected_wheel
+	var cost = get_wheel_cost(wheel_num)
 	if coins < cost:
 		return {"success": false, "reason": "not_enough_coins"}
 
 	coins -= cost
 	total_spins += 1
 
+	# Unlock next wheel if we reached a new high
+	if wheel_num >= highest_unlocked and wheel_num < MAX_WHEELS:
+		highest_unlocked = wheel_num + 1
+		# Track cycles when we complete a full 1-10 run
+		if highest_unlocked == MAX_WHEELS + 1:
+			cycle_count += 1
+
 	# Calculate result with skill modifiers
-	var result = WheelConfig.calculate_outcome(current_wheel, self)
+	var result = WheelConfig.calculate_outcome(wheel_num, self)
 	var delta = result["delta"]
 	var outcome = result["outcome"]
 
@@ -95,7 +119,7 @@ func spin_wheel():
 	# Check game end (only on wheel 10 jackpot)
 	var game_over = false
 	var is_jackpot = false
-	if current_wheel == MAX_WHEELS:
+	if wheel_num == MAX_WHEELS:
 		if outcome[IDX_OP] == WheelConfig.OP_MULTIPLY and outcome[IDX_LABEL] == "JACKPOT":
 			game_over = true
 			is_jackpot = true
@@ -104,15 +128,6 @@ func spin_wheel():
 	if game_over:
 		SaveManager.set_best_score(coins)
 		SaveManager.increment_games_played()
-
-	# Advance to next wheel
-	if not game_over:
-		if current_wheel == MAX_WHEELS:
-			current_wheel = 1
-			cycle_count += 1
-		else:
-			current_wheel += 1
-		wheel_changed.emit(current_wheel)
 
 	spin_completed.emit()
 
