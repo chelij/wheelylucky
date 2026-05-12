@@ -1276,3 +1276,17 @@ func increment_games_played():
 1. **Exact balances** — All weights, costs, values TBD for Task 16 balance pass
 2. **Jackpot type** — ×10 coins or fixed prize? Current plan: ×10
 3. **End screen rating thresholds** — TBD with balances
+
+---
+
+## TODO (Next Session)
+
+### Bugs
+
+- **Wheel-Pointer Inaccuracy** — The landed segment doesn't align precisely with the pointer arrow. Need to debug rotation math in `wheel.gd` (`target_rotation` calculation) and verify pointer offset (currently `+0°` for right-side pointer).
+
+### Balance
+
+- **Shop rebalance** — Cheaper costs but less effective per level (smaller incremental gains)
+- **Shop choices** — Reduce number of options shown, randomize which skills appear (not all available at once)
+- **Wheel unlock system** — Define mechanics for unlocking wheels (currently all accessible if affordable — may need separate unlock condition)
