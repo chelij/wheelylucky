@@ -19,6 +19,7 @@ const IDX_COLOR = 4
 var is_spinning: bool = false
 var current_rotation: float = 0.0
 var target_rotation: float = 0.0
+var spin_start_rotation: float = 0.0
 var spin_start_time: float = 0.0
 var base_spin_duration: float = 2.5
 var pending_result: Variant = null

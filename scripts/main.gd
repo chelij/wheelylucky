@@ -74,7 +74,7 @@ func _on_spin_finished(outcome):
 
 func _show_floating_result(delta: int, color: Color):
 	var label = Label.new()
-	label.anchors_preset = Control.ANCHOR_BOTTOM_LEFT
+	label.anchors_preset = Control.PRESET_BOTTOM_LEFT
 	label.position = Vector2(490, 350)
 	label.size = Vector2(100, 30)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
