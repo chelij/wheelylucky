@@ -68,6 +68,7 @@ offset_top = 90.0
 offset_right = 730.0
 offset_bottom = 650.0
 script = ExtResource("1_wheel")
+update_mode = 2
 
 [node name="PointerArrow" type="Polygon2D" parent="Wheel"]
 position = Vector2(200, 130)
