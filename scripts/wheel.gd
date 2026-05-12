@@ -29,7 +29,7 @@ func _ready():
 	_on_coins_changed(Game.coins)
 	queue_redraw()
 
-func _process(delta):
+func _process(_delta):
 	if is_spinning:
 		var elapsed = Time.get_ticks_msec() / 1000.0 - spin_start_time
 		var duration = get_effective_spin_duration()
@@ -111,9 +111,9 @@ func _draw():
 	var wheel_outcomes = WheelConfig.get_outcomes(Game.current_wheel)
 	var rect = get_rect()
 	var center = rect.position + rect.size / 2.0
-	var radius = min(rect.size.x, rect.size.y) / 2.0 - 4.0
+	var radius = min(rect.size.x, rect.size.y) / 2.0 - 8.0
 
-	if wheel_outcomes.size() == 0:
+	if wheel_outcomes.size() == 0 or radius <= 0:
 		return
 
 	var segment_angle = TAU / wheel_outcomes.size()
@@ -140,7 +140,7 @@ func _draw():
 	for i in range(wheel_outcomes.size()):
 		var outcome = wheel_outcomes[i]
 		var mid_angle = i * segment_angle + segment_angle / 2.0 + rotation_rad
-		var label_pos = center + Vector2(cos(mid_angle), sin(mid_angle)) * (radius * 0.65)
+		var label_pos = center + Vector2(cos(mid_angle), sin(mid_angle)) * (radius * 0.6)
 
 		draw_string(
 			ThemeDB.fallback_font,

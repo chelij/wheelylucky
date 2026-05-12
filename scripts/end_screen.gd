@@ -1,11 +1,11 @@
 # scripts/end_screen.gd
 extends CanvasLayer
 
-@onready var title_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/TitleLabel
-@onready var final_coins_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/FinalCoinsLabel
-@onready var stats_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/StatsLabel
-@onready var rating_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/RatingLabel
-@onready var restart_button: Button = $CenterContainer/VBoxContainer/Panel/EndVBox/RestartButton
+@onready var title_label: Label = $CenterContainer/EndPanel/EndVBox/TitleLabel
+@onready var final_coins_label: Label = $CenterContainer/EndPanel/EndVBox/FinalCoinsLabel
+@onready var stats_label: Label = $CenterContainer/EndPanel/EndVBox/StatsLabel
+@onready var rating_label: Label = $CenterContainer/EndPanel/EndVBox/RatingLabel
+@onready var restart_button: Button = $CenterContainer/EndPanel/EndVBox/RestartButton
 
 func _ready():
 	final_coins_label.text = "Final Score: " + str(Game.coins) + " coins"

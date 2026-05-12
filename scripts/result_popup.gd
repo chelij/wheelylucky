@@ -1,8 +1,8 @@
 # scripts/result_popup.gd
 extends CanvasLayer
 
-@export var result_label: Label
-@export var total_label: Label
+@onready var result_label: Label = $VBoxContainer/ResultLabel
+@onready var total_label: Label = $VBoxContainer/TotalLabel
 
 func show_result(delta: int, outcome_color: Color):
 	if delta > 0:

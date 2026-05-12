@@ -19,51 +19,45 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(600, 500)
-layout_mode = 0
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="Panel" type="Panel" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 500)
+[node name="ShopPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(500, 450)
 layout_mode = 0
 
-[node name="ShopVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Panel"]
+[node name="ShopVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/separation = 8
+alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer/Panel/ShopVBox"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox"]
 text = "SHOP"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 
-[node name="CoinsLabel" type="Label" parent="CenterContainer/VBoxContainer/Panel/ShopVBox"]
+[node name="CoinsLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox"]
 text = "Coins: 0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/VBoxContainer/Panel/ShopVBox"]
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/ShopPanel/ShopVBox"]
 layout_mode = 1
 anchor_right = 1.0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/VBoxContainer/Panel/ShopVBox"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/ShopPanel/ShopVBox"]
 layout_mode = 1
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_minimum_size = Vector2(0, 250)
 size_flags_vertical = 3
 
-[node name="SkillsVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Panel/ShopVBox/ScrollContainer"]
+[node name="SkillsVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer/Panel/ShopVBox"]
+[node name="ContinueButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox"]
 custom_minimum_size = Vector2(0, 44)
 text = "Continue"

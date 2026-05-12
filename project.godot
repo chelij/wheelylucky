@@ -1,6 +1,10 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; but it can be also just edited as a text file.
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -10,18 +14,17 @@ config/name="Wheely Lucky"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6")
 
+[autoload]
+
+Game="*res://scripts/game.gd"
+SaveManager="*res://scripts/save_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 
-[autoload]
-
-Game="*res://scripts/game.gd"
-SaveManager="*res://scripts/save_manager.gd"
-
 [rendering]
 
 renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"

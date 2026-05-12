@@ -3,20 +3,11 @@ extends CanvasLayer
 
 const SkillManager = preload("res://scripts/skill_manager.gd")
 
-@export var skills_container: VBoxContainer
-@export var coins_label: Label
-@export var continue_button: Button
+@onready var skills_container: VBoxContainer = $CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox
+@onready var coins_label: Label = $CenterContainer/ShopPanel/ShopVBox/CoinsLabel
+@onready var continue_button: Button = $CenterContainer/ShopPanel/ShopVBox/ContinueButton
 
 func _ready():
-	# Find nodes by path since we build dynamically
-	var panel = get_node_or_null("CenterContainer/VBoxContainer/Panel")
-	if panel:
-		var shop_vbox = panel.get_node_or_null("ShopVBox")
-		if shop_vbox:
-			skills_container = shop_vbox.get_node_or_null("ScrollContainer/SkillsVBox") as VBoxContainer
-			coins_label = shop_vbox.get_node_or_null("CoinsLabel") as Label
-			continue_button = shop_vbox.get_node_or_null("ContinueButton") as Button
-
 	continue_button.pressed.connect(_on_close)
 	Game.coins_changed.connect(_on_coins_changed)
 	_populate_skills()

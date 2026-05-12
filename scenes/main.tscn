@@ -1,14 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/wheel.gd" id="2_wheel"]
+[ext_resource type="Script" path="res://scripts/wheel.gd" id="1_wheel"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1_main")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -21,10 +19,8 @@ color = Color(0.08, 0.08, 0.15, 1)
 layout_mode = 1
 anchors_preset = 7
 anchor_right = 1.0
-offset_left = 0.0
 offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 60.0
+offset_bottom = 50.0
 theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="TopBar"]
@@ -44,129 +40,85 @@ horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 60.0
-
-[node name="WheelHolder" type="Control" parent="CenterContainer"]
-layout_mode = 0
-
-[node name="WheelInstance" type="Control" parent="CenterContainer/WheelHolder"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-custom_minimum_size = Vector2(400, 400)
-
-[node name="WheelDrawing" type="Control" parent="CenterContainer/WheelHolder/WheelInstance"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-custom_minimum_size = Vector2(400, 400)
-script = ExtResource("2_wheel")
-
-[node name="Pointer" type="Control" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
-layout_mode = 1
-anchors_preset = 8
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -12.0
-offset_top = 0.0
-offset_right = 12.0
-offset_bottom = 25.0
-
-[node name="PointerTriangle" type="Polygon2D" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing/Pointer"]
-polygon = PackedVector2Array(0, 0, -12, 25, 12, 25)
-color = Color(1, 0.9, 0.2, 1)
-
-[node name="CenterLabel" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+[node name="Wheel" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -60.0
-offset_top = -25.0
-offset_right = 60.0
-offset_bottom = 25.0
-text = "SPIN"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 1, 1, 0.8)
-theme_override_font_sizes/font_size = 28
+offset_left = -220.0
+offset_top = -220.0
+offset_right = 220.0
+offset_bottom = 220.0
+script = ExtResource("1_wheel")
 
-[node name="CycleLabel" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+[node name="CycleLabel" type="Label" parent="Wheel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -60.0
-offset_top = -180.0
-offset_right = 60.0
-offset_bottom = -155.0
+offset_left = -50.0
+offset_top = -240.0
+offset_right = 50.0
+offset_bottom = -215.0
 text = "Cycle 1"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
 
-[node name="WheelNumber" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+[node name="WheelNumber" type="Label" parent="Wheel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -60.0
-offset_top = -155.0
+offset_top = -215.0
 offset_right = 60.0
-offset_bottom = -130.0
+offset_bottom = -190.0
 text = "Wheel 1 / 10"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 16
 
-[node name="CostDisplay" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+[node name="CoinsDisplay" type="Label" parent="Wheel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -190.0
+offset_right = 40.0
+offset_bottom = -165.0
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="CostDisplay" type="Label" parent="Wheel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -60.0
-offset_top = 130.0
+offset_top = 190.0
 offset_right = 60.0
-offset_bottom = 155.0
+offset_bottom = 215.0
 text = "FREE"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
 
-[node name="CoinsDisplay" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
-layout_mode = 1
-anchors_preset = 8
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -50.0
-offset_top = -215.0
-offset_right = 50.0
-offset_bottom = -190.0
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
-theme_override_font_sizes/font_size = 20
-
-[node name="SpinButton" type="Button" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+[node name="SpinButton" type="Button" parent="Wheel"]
 layout_mode = 1
 anchors_preset = 7
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -80.0
-offset_top = 160.0
-offset_right = 80.0
-offset_bottom = 195.0
+offset_left = -70.0
+offset_top = 220.0
+offset_right = 70.0
+offset_bottom = 260.0
 text = "SPIN"
 
 [node name="StatsPanel" type="VBoxContainer" parent="."]
@@ -175,10 +127,10 @@ anchors_preset = 5
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 1080.0
-offset_top = 60.0
+offset_top = 50.0
 offset_right = 1280.0
 offset_bottom = 720.0
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="StatsBackground" type="ColorRect" parent="StatsPanel"]
 layout_mode = 1

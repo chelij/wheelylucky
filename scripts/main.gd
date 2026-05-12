@@ -6,8 +6,8 @@ extends Control
 @onready var stats_skills_label: Label = $StatsPanel/StatsVBox/StatsSkills
 @onready var stats_best_label: Label = $StatsPanel/StatsVBox/StatsBest
 @onready var top_coins_display: Label = $TopBar/TopCoinsDisplay
-@onready var wheel_instance: Control = $CenterContainer/WheelHolder/WheelInstance/WheelDrawing
-@onready var spin_button: Button = $CenterContainer/WheelHolder/WheelInstance/WheelDrawing/SpinButton
+@onready var wheel_node: Control = $Wheel
+@onready var spin_button: Button = $Wheel/SpinButton
 
 var _shop_open: bool = false
 
@@ -35,14 +35,13 @@ func _on_shop_requested():
 	var shop = shop_path.instantiate()
 	add_child(shop)
 
-	# Listen for shop close via tree_exited
 	shop.tree_exited.connect(_on_shop_closed)
 
 func _on_shop_closed():
 	_shop_open = false
 	_update_stats()
 
-func _on_game_ended(final_coins: int):
+func _on_game_ended(_final_coins: int):
 	var end_path = preload("res://scenes/end_screen.tscn")
 	var end_screen = end_path.instantiate()
 	add_child(end_screen)
