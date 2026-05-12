@@ -72,7 +72,7 @@ update_mode = 2
 
 [node name="PointerArrow" type="Polygon2D" parent="Wheel"]
 position = Vector2(380, 280)
-polygon = PackedVector2Array(0, 0, -24, -14, -24, 14)
+polygon = PackedVector2Array(0, 0, 24, -14, 24, 14)
 color = Color(1, 0.85, 0, 1)
 
 [node name="CycleLabel" type="Label" parent="Wheel"]
