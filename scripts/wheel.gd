@@ -1,6 +1,8 @@
 # scripts/wheel.gd
 extends Control
 
+signal spin_finished(outcome)
+
 const WheelConfig = preload("res://scripts/wheel_config.gd")
 const IDX_LABEL = 0
 const IDX_OP = 1
@@ -19,7 +21,6 @@ var current_rotation: float = 0.0
 var target_rotation: float = 0.0
 var spin_start_time: float = 0.0
 var base_spin_duration: float = 2.5
-var pending_result: Variant = null  # Pre-determined outcome for game logic
 
 # Cached for consistent drawing during spin
 var cached_outcomes: Array = []
@@ -51,8 +52,9 @@ func _process(_delta):
 
 		if progress >= 1.0:
 			is_spinning = false
-			var result = Game.spin_wheel(pending_result)
-			_on_spin_finished(result)
+			spin_button.disabled = false
+			# Emit the pre-chosen outcome — game.gd will use it
+			spin_finished.emit(pending_result)
 
 func get_effective_spin_duration() -> float:
 	var quick_level = Game.skill_levels.get("quick_spin", 0)
@@ -96,22 +98,6 @@ func start_spin():
 
 	current_rotation = 0.0
 	queue_redraw()
-
-func _on_spin_finished(result):
-	spin_button.disabled = false
-
-	if result.get("success", false):
-		var delta = result.get("delta", 0)
-		var color = result.get("outcome_color", Color.WHITE)
-		var popup_path = preload("res://scenes/result_popup.tscn")
-		var popup = popup_path.instantiate()
-		get_tree().root.add_child(popup)
-		popup.show_result(delta, color)
-
-		# Wait for popup to fade before resetting wheel position
-		await get_tree().create_timer(2.0).timeout
-		current_rotation = 0.0
-		queue_redraw()
 
 func _on_coins_changed(total: int):
 	coins_label.text = str(total)
@@ -169,3 +155,7 @@ func _draw():
 			16,
 			Color.WHITE
 		)
+
+func reset_rotation():
+	current_rotation = 0.0
+	queue_redraw()

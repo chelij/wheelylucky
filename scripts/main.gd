@@ -24,7 +24,7 @@ func _ready():
 		wheel_selector_container.add_child(btn)
 		wheel_buttons.append(btn)
 
-	Game.spin_completed.connect(_on_spin_completed)
+	wheel_node.spin_finished.connect(_on_spin_finished)
 	Game.shop_requested.connect(_on_shop_requested)
 	Game.game_ended.connect(_on_game_ended)
 	Game.coins_changed.connect(_update_top_coins)
@@ -65,7 +65,8 @@ func _on_wheel_select(wheel_num: int):
 	if Game.is_wheel_unlocked(wheel_num) and not wheel_node.is_spinning:
 		Game.select_wheel(wheel_num)
 
-func _on_spin_completed():
+func _on_spin_finished(outcome):
+	Game.spin_wheel(outcome)
 	_update_stats()
 
 func _on_shop_requested():
