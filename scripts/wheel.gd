@@ -37,7 +37,6 @@ func _ready():
 	queue_redraw()
 
 func _refresh_outcomes():
-	"""Get skill-modified outcomes for consistent visual/game alignment."""
 	cached_outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
 	cached_outcomes = WheelConfig.apply_skill_modifiers(cached_outcomes, Game)
 
@@ -47,14 +46,15 @@ func _process(_delta):
 		var duration = get_effective_spin_duration()
 		var progress = min(elapsed / duration, 1.0)
 
-		var eased = 1.0 - pow(1.0 - progress, 3)
-		current_rotation = target_rotation * eased
+		# Fast start, slow end: ease-out quint
+		var eased = 1.0 - pow(1.0 - progress, 5)
+		current_rotation = spin_start_rotation + target_rotation * eased
 		queue_redraw()
 
 		if progress >= 1.0:
 			is_spinning = false
 			spin_button.disabled = false
-			# Emit the pre-chosen outcome — game.gd will use it
+			current_rotation = spin_start_rotation + target_rotation
 			spin_finished.emit(pending_result)
 
 func get_effective_spin_duration() -> float:
@@ -72,6 +72,9 @@ func start_spin():
 	is_spinning = true
 	spin_button.disabled = true
 	spin_start_time = Time.get_ticks_msec() / 1000.0
+
+	# Remember where we're starting from (accumulate rotation)
+	spin_start_rotation = current_rotation
 
 	# Refresh outcomes with current skill modifiers
 	_refresh_outcomes()
@@ -92,12 +95,11 @@ func start_spin():
 		var jitter = randf_range(-segment_angle * 0.3, segment_angle * 0.3)
 		var target_segment = segment_center + jitter
 		var full_rotations = randi_range(3, 5) * 360
-		# Pointer at top = 270° offset from angle-0 (right side)
-		target_rotation = full_rotations + fmod(360.0 - target_segment + 270.0, 360.0)
+		# Pointer at right side = 0° offset
+		target_rotation = full_rotations + fmod(360.0 - target_segment, 360.0)
 	else:
 		target_rotation = randi_range(3, 5) * 360
 
-	current_rotation = 0.0
 	queue_redraw()
 
 func _on_coins_changed(total: int):
@@ -156,7 +158,3 @@ func _draw():
 			16,
 			Color.WHITE
 		)
-
-func reset_rotation():
-	current_rotation = 0.0
-	queue_redraw()

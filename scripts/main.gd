@@ -70,17 +70,31 @@ func _on_spin_finished(outcome):
 	_update_stats()
 	
 	if result.get("success", false):
-		_show_result_popup(result.get("delta", 0), result.get("outcome_color", Color.WHITE))
+		_show_floating_result(result.get("delta", 0), result.get("outcome_color", Color.WHITE))
 
-func _show_result_popup(delta: int, color: Color):
-	spin_button.disabled = true
-	var popup_path = preload("res://scenes/result_popup.tscn")
-	var popup = popup_path.instantiate()
-	add_child(popup)
-	popup.show_result(delta, color)
-	popup.closed.connect(func():
-		spin_button.disabled = false
-		wheel_node.reset_rotation())
+func _show_floating_result(delta: int, color: Color):
+	var label = Label.new()
+	label.anchors_preset = Control.ANCHOR_BOTTOM_LEFT
+	label.position = Vector2(490, 350)
+	label.size = Vector2(100, 30)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.theme_override_font_sizes.font_size = 18
+	label.theme_override_colors.font_color = color
+	
+	if delta > 0:
+		label.text = "+" + str(delta)
+	elif delta < 0:
+		label.text = str(delta)
+	else:
+		label.text = "—"
+	
+	wheel_node.add_child(label)
+	
+	var tween = create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 60, 1.5)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(label.queue_free)
 
 func _on_shop_requested():
 	spin_button.disabled = true
