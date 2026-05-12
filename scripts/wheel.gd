@@ -19,6 +19,10 @@ var current_rotation: float = 0.0
 var target_rotation: float = 0.0
 var spin_start_time: float = 0.0
 var base_spin_duration: float = 2.5
+var pending_result: Variant = null  # Pre-determined outcome for game logic
+
+# Cached for consistent drawing during spin
+var cached_outcomes: Array = []
 
 func _ready():
 	Game.coins_changed.connect(_on_coins_changed)
@@ -27,7 +31,13 @@ func _ready():
 
 	_on_wheel_changed(Game.selected_wheel)
 	_on_coins_changed(Game.coins)
+	_refresh_outcomes()
 	queue_redraw()
+
+func _refresh_outcomes():
+	"""Get skill-modified outcomes for consistent visual/game alignment."""
+	cached_outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
+	cached_outcomes = WheelConfig.apply_skill_modifiers(cached_outcomes, Game)
 
 func _process(_delta):
 	if is_spinning:
@@ -41,7 +51,7 @@ func _process(_delta):
 
 		if progress >= 1.0:
 			is_spinning = false
-			var result = Game.spin_wheel()
+			var result = Game.spin_wheel(pending_result)
 			_on_spin_finished(result)
 
 func get_effective_spin_duration() -> float:
@@ -60,32 +70,35 @@ func start_spin():
 	spin_button.disabled = true
 	spin_start_time = Time.get_ticks_msec() / 1000.0
 
-	var outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
-	outcomes = WheelConfig.apply_skill_modifiers(outcomes, Game)
+	# Refresh outcomes with current skill modifiers
+	_refresh_outcomes()
 
-	var chosen = WheelConfig.weighted_random(outcomes)
+	var chosen = WheelConfig.weighted_random(cached_outcomes)
 	var chosen_index = -1
-	for i in range(outcomes.size()):
-		if outcomes[i][IDX_LABEL] == chosen[IDX_LABEL] and outcomes[i][IDX_OP] == chosen[IDX_OP]:
+	for i in range(cached_outcomes.size()):
+		if cached_outcomes[i][IDX_LABEL] == chosen[IDX_LABEL] and cached_outcomes[i][IDX_OP] == chosen[IDX_OP]:
 			chosen_index = i
 			break
 
+	# Store for game logic — visual and game use the SAME outcome
+	pending_result = chosen
+
 	if chosen_index >= 0:
-		var segment_angle = 360.0 / outcomes.size()
+		var segment_angle = 360.0 / cached_outcomes.size()
 		var segment_center = chosen_index * segment_angle + segment_angle / 2.0
 		var jitter = randf_range(-segment_angle * 0.3, segment_angle * 0.3)
 		var target_segment = segment_center + jitter
 		var full_rotations = randi_range(3, 5) * 360
-		target_rotation = full_rotations + fmod(360 - target_segment + 270, 360)
+		# Pointer at top = 270° offset from angle-0 (right side)
+		target_rotation = full_rotations + fmod(360.0 - target_segment + 270.0, 360.0)
 	else:
 		target_rotation = randi_range(3, 5) * 360
 
 	current_rotation = 0.0
+	queue_redraw()
 
 func _on_spin_finished(result):
 	spin_button.disabled = false
-	current_rotation = 0.0
-	queue_redraw()
 
 	if result.get("success", false):
 		var delta = result.get("delta", 0)
@@ -94,6 +107,11 @@ func _on_spin_finished(result):
 		var popup = popup_path.instantiate()
 		get_tree().root.add_child(popup)
 		popup.show_result(delta, color)
+
+		# Wait for popup to fade before resetting wheel position
+		await get_tree().create_timer(2.0).timeout
+		current_rotation = 0.0
+		queue_redraw()
 
 func _on_coins_changed(total: int):
 	coins_label.text = str(total)
@@ -105,12 +123,12 @@ func _on_wheel_changed(wheel_num: int):
 	var cost = Game.get_wheel_cost(wheel_num)
 	cost_label.text = "FREE" if cost == 0 else "Cost: " + str(cost)
 	spin_button.disabled = not Game.can_afford_wheel(wheel_num) or is_spinning
+	_refresh_outcomes()
 	queue_redraw()
 
 func _draw():
-	var wheel_outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
+	var wheel_outcomes = cached_outcomes if cached_outcomes.size() > 0 else WheelConfig.get_outcomes(Game.selected_wheel)
 	var center = size / 2.0
-	# Fixed radius for the 400x560 Wheel Control.
 	var radius = 150.0
 
 	if wheel_outcomes.size() == 0 or radius <= 0:

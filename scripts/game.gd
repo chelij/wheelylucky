@@ -81,7 +81,7 @@ func select_wheel(wheel_num: int):
 	selected_wheel_changed.emit(selected_wheel)
 	wheel_changed.emit(selected_wheel)
 
-func spin_wheel():
+func spin_wheel(pre_chosen_outcome = null):
 	var wheel_num = selected_wheel
 	var cost = get_wheel_cost(wheel_num)
 	if coins < cost:
@@ -93,19 +93,37 @@ func spin_wheel():
 	# Unlock next wheel if we reached a new high
 	if wheel_num >= highest_unlocked and wheel_num < MAX_WHEELS:
 		highest_unlocked = wheel_num + 1
-		# Track cycles when we complete a full 1-10 run
 		if highest_unlocked == MAX_WHEELS + 1:
 			cycle_count += 1
 
-	# Calculate result with skill modifiers
-	var result = WheelConfig.calculate_outcome(wheel_num, self)
-	var delta = result["delta"]
-	var outcome = result["outcome"]
+	# Use the pre-determined visual outcome so pointer matches result
+	var outcome
+	if pre_chosen_outcome != null:
+		outcome = pre_chosen_outcome
+	else:
+		# Fallback: calculate independently (shouldn't happen in normal flow)
+		var calc = WheelConfig.calculate_outcome(wheel_num, self)
+		outcome = calc["outcome"]
+		var delta = calc["delta"]
+		coins = max(0, coins + delta)
+		coins_changed.emit(coins)
+		# Skip normal delta calc since we already applied it
+		return _finish_spin(outcome, delta)
 
-	# Apply result
+	# Apply result — outcome already has skill modifiers baked in from wheel.gd
+	var delta = outcome[WheelConfig.IDX_VALUE]
+	if outcome[WheelConfig.IDX_OP] == WheelConfig.OP_ADD:
+		pass  # delta is already the value
+	elif outcome[WheelConfig.IDX_OP] == WheelConfig.OP_MULTIPLY:
+		delta = coins * delta - coins
+	elif outcome[WheelConfig.IDX_OP] == WheelConfig.OP_DIVIDE:
+		delta = int(coins / delta) - coins
 	coins = max(0, coins + delta)
 	coins_changed.emit(coins)
 
+	return _finish_spin(outcome, delta)
+
+func _finish_spin(outcome, delta: int) -> Dictionary:
 	# Check second wind (once per run)
 	if coins == 0 and not second_wind_used:
 		if "second_wind" in unique_skills:
@@ -119,7 +137,7 @@ func spin_wheel():
 	# Check game end (only on wheel 10 jackpot)
 	var game_over = false
 	var is_jackpot = false
-	if wheel_num == MAX_WHEELS:
+	if selected_wheel == MAX_WHEELS:
 		if outcome[IDX_OP] == WheelConfig.OP_MULTIPLY and outcome[IDX_LABEL] == "JACKPOT":
 			game_over = true
 			is_jackpot = true
