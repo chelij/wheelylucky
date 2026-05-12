@@ -20,7 +20,7 @@ func show_result(delta: int, outcome_color: Color):
 	var tween = create_tween()
 	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
 	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 1.2)
+tween.tween_property(self, "self_modulate", Color(1, 1, 1, 0), 1.2)
 	tween.tween_callback(_on_fade_done)
 
 func _on_fade_done():

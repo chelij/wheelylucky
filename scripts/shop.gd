@@ -48,7 +48,7 @@ func _populate_skills():
 		var cost_lbl = Label.new()
 		cost_lbl.text = str(cost)
 		cost_lbl.size_flags_horizontal = Control.SIZE_SHRINK_END
-		cost_lbl.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(cost_lbl)
 
 		var buy_btn = Button.new()
