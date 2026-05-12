@@ -66,8 +66,21 @@ func _on_wheel_select(wheel_num: int):
 		Game.select_wheel(wheel_num)
 
 func _on_spin_finished(outcome):
-	Game.spin_wheel(outcome)
+	var result = Game.spin_wheel(outcome)
 	_update_stats()
+	
+	if result.get("success", false):
+		_show_result_popup(result.get("delta", 0), result.get("outcome_color", Color.WHITE))
+
+func _show_result_popup(delta: int, color: Color):
+	spin_button.disabled = true
+	var popup_path = preload("res://scenes/result_popup.tscn")
+	var popup = popup_path.instantiate()
+	add_child(popup)
+	popup.show_result(delta, color)
+	popup.closed.connect(func():
+		spin_button.disabled = false
+		wheel_node.reset_rotation())
 
 func _on_shop_requested():
 	spin_button.disabled = true
