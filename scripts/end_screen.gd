@@ -1,0 +1,37 @@
+# scripts/end_screen.gd
+extends CanvasLayer
+
+@onready var title_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/TitleLabel
+@onready var final_coins_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/FinalCoinsLabel
+@onready var stats_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/StatsLabel
+@onready var rating_label: Label = $CenterContainer/VBoxContainer/Panel/EndVBox/RatingLabel
+@onready var restart_button: Button = $CenterContainer/VBoxContainer/Panel/EndVBox/RestartButton
+
+func _ready():
+	final_coins_label.text = "Final Score: " + str(Game.coins) + " coins"
+
+	var skill_count = Game.unique_skills.size()
+	var level_sum = 0
+	for val in Game.skill_levels.values():
+		level_sum += val
+	stats_label.text = "Spins: " + str(Game.total_spins) + \
+		" | Cycles: " + str(Game.cycle_count) + \
+		" | Skills: " + str(skill_count) + " unique, " + str(level_sum) + " upgrades"
+
+	var rating = calculate_rating(Game.coins)
+	rating_label.text = ""
+	for i in range(rating):
+		rating_label.text += "⭐"
+
+	restart_button.pressed.connect(_on_restart)
+
+func calculate_rating(coins: int) -> int:
+	if coins >= 500: return 5
+	if coins >= 200: return 4
+	if coins >= 100: return 3
+	if coins >= 50: return 2
+	return 1
+
+func _on_restart():
+	Game.reset_run()
+	queue_free()

@@ -1,0 +1,221 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/wheel.gd" id="2_wheel"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.15, 1)
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_right = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 60.0
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="TopBar"]
+text = "Wheely Lucky"
+size_flags_horizontal = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+
+[node name="Spacer" type="Control" parent="TopBar"]
+layout_mode = 1
+size_flags_horizontal = 2
+
+[node name="TopCoinsDisplay" type="Label" parent="TopBar"]
+text = "0 coins"
+size_flags_horizontal = 1
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 60.0
+
+[node name="WheelHolder" type="Control" parent="CenterContainer"]
+layout_mode = 0
+
+[node name="WheelInstance" type="Control" parent="CenterContainer/WheelHolder"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_minimum_size = Vector2(400, 400)
+
+[node name="WheelDrawing" type="Control" parent="CenterContainer/WheelHolder/WheelInstance"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_minimum_size = Vector2(400, 400)
+script = ExtResource("2_wheel")
+
+[node name="Pointer" type="Control" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_top = 0.0
+offset_right = 12.0
+offset_bottom = 25.0
+
+[node name="PointerTriangle" type="Polygon2D" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing/Pointer"]
+polygon = PackedVector2Array(0, 0, -12, 25, 12, 25)
+color = Color(1, 0.9, 0.2, 1)
+
+[node name="CenterLabel" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -25.0
+offset_right = 60.0
+offset_bottom = 25.0
+text = "SPIN"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_font_sizes/font_size = 28
+
+[node name="CycleLabel" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -180.0
+offset_right = 60.0
+offset_bottom = -155.0
+text = "Cycle 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
+
+[node name="WheelNumber" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -155.0
+offset_right = 60.0
+offset_bottom = -130.0
+text = "Wheel 1 / 10"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="CostDisplay" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = 130.0
+offset_right = 60.0
+offset_bottom = 155.0
+text = "FREE"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
+
+[node name="CoinsDisplay" type="Label" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 8
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -215.0
+offset_right = 50.0
+offset_bottom = -190.0
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="SpinButton" type="Button" parent="CenterContainer/WheelHolder/WheelInstance/WheelDrawing"]
+layout_mode = 1
+anchors_preset = 7
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = 160.0
+offset_right = 80.0
+offset_bottom = 195.0
+text = "SPIN"
+
+[node name="StatsPanel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1080.0
+offset_top = 60.0
+offset_right = 1280.0
+offset_bottom = 720.0
+theme_override_constants/separation = 6
+
+[node name="StatsBackground" type="ColorRect" parent="StatsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.1, 0.18, 0.8)
+
+[node name="StatsVBox" type="VBoxContainer" parent="StatsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 8
+
+[node name="StatsTitle" type="Label" parent="StatsPanel/StatsVBox"]
+text = "STATS"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="StatsSpins" type="Label" parent="StatsPanel/StatsVBox"]
+text = "Total Spins: 0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+
+[node name="StatsCycles" type="Label" parent="StatsPanel/StatsVBox"]
+text = "Cycles: 1"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+
+[node name="StatsSkills" type="Label" parent="StatsPanel/StatsVBox"]
+text = "Skills: 0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+
+[node name="StatsBest" type="Label" parent="StatsPanel/StatsVBox"]
+text = "Best Score: 0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)

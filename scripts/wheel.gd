@@ -1,0 +1,153 @@
+# scripts/wheel.gd
+extends Control
+
+const WheelConfig = preload("res://scripts/wheel_config.gd")
+const IDX_LABEL = 0
+const IDX_OP = 1
+const IDX_VALUE = 2
+const IDX_WEIGHT = 3
+const IDX_COLOR = 4
+
+@onready var cycle_label: Label = $CycleLabel
+@onready var wheel_number_label: Label = $WheelNumber
+@onready var cost_label: Label = $CostDisplay
+@onready var coins_label: Label = $CoinsDisplay
+@onready var spin_button: Button = $SpinButton
+
+var is_spinning: bool = false
+var current_rotation: float = 0.0
+var target_rotation: float = 0.0
+var spin_start_time: float = 0.0
+var base_spin_duration: float = 2.5
+
+func _ready():
+	Game.coins_changed.connect(_on_coins_changed)
+	Game.wheel_changed.connect(_on_wheel_changed)
+	spin_button.pressed.connect(_on_spin_pressed)
+
+	_on_wheel_changed(Game.current_wheel)
+	_on_coins_changed(Game.coins)
+	queue_redraw()
+
+func _process(delta):
+	if is_spinning:
+		var elapsed = Time.get_ticks_msec() / 1000.0 - spin_start_time
+		var duration = get_effective_spin_duration()
+		var progress = min(elapsed / duration, 1.0)
+
+		var eased = 1.0 - pow(1.0 - progress, 3)
+		current_rotation = target_rotation * eased
+		queue_redraw()
+
+		if progress >= 1.0:
+			is_spinning = false
+			var result = Game.spin_wheel()
+			_on_spin_finished(result)
+
+func get_effective_spin_duration() -> float:
+	var quick_level = Game.skill_levels.get("quick_spin", 0)
+	return base_spin_duration * pow(0.88, quick_level)
+
+func _on_spin_pressed():
+	if is_spinning:
+		return
+	if not Game.can_afford_wheel(Game.current_wheel):
+		return
+	start_spin()
+
+func start_spin():
+	is_spinning = true
+	spin_button.disabled = true
+	spin_start_time = Time.get_ticks_msec() / 1000.0
+
+	var outcomes = WheelConfig.get_outcomes(Game.current_wheel)
+	outcomes = WheelConfig.apply_skill_modifiers(outcomes, Game)
+
+	var chosen = WheelConfig.weighted_random(outcomes)
+	var chosen_index = -1
+	for i in range(outcomes.size()):
+		if outcomes[i][IDX_LABEL] == chosen[IDX_LABEL] and outcomes[i][IDX_OP] == chosen[IDX_OP]:
+			chosen_index = i
+			break
+
+	if chosen_index >= 0:
+		var segment_angle = 360.0 / outcomes.size()
+		var segment_center = chosen_index * segment_angle + segment_angle / 2.0
+		var jitter = randf_range(-segment_angle * 0.3, segment_angle * 0.3)
+		var target_segment = segment_center + jitter
+		var full_rotations = randi_range(3, 5) * 360
+		target_rotation = full_rotations + (360 - target_segment + 270) % 360
+	else:
+		target_rotation = randi_range(3, 5) * 360
+
+	current_rotation = 0.0
+
+func _on_spin_finished(result):
+	spin_button.disabled = false
+	current_rotation = 0.0
+	queue_redraw()
+
+	if result.get("success", false):
+		var delta = result.get("delta", 0)
+		var color = result.get("outcome_color", Color.WHITE)
+		var popup_path = preload("res://scenes/result_popup.tscn")
+		var popup = popup_path.instantiate()
+		get_tree().root.add_child(popup)
+		popup.show_result(delta, color)
+
+func _on_coins_changed(total: int):
+	coins_label.text = str(total)
+	spin_button.disabled = not Game.can_afford_wheel(Game.current_wheel) or is_spinning
+
+func _on_wheel_changed(wheel_num: int):
+	wheel_number_label.text = "Wheel " + str(wheel_num) + " / 10"
+	cycle_label.text = "Cycle " + str(Game.cycle_count)
+	var cost = Game.get_wheel_cost(wheel_num)
+	cost_label.text = "FREE" if cost == 0 else "Cost: " + str(cost)
+	spin_button.disabled = not Game.can_afford_wheel(wheel_num)
+	queue_redraw()
+
+func _draw():
+	var wheel_outcomes = WheelConfig.get_outcomes(Game.current_wheel)
+	var rect = get_rect()
+	var center = rect.position + rect.size / 2.0
+	var radius = min(rect.size.x, rect.size.y) / 2.0 - 4.0
+
+	if wheel_outcomes.size() == 0:
+		return
+
+	var segment_angle = TAU / wheel_outcomes.size()
+	var rotation_rad = deg_to_rad(current_rotation)
+
+	for i in range(wheel_outcomes.size()):
+		var outcome = wheel_outcomes[i]
+		var start_angle = i * segment_angle + rotation_rad
+		var end_angle = start_angle + segment_angle
+
+		var points = PackedVector2Array()
+		points.append(center)
+
+		for j in range(33):
+			var angle = start_angle + (end_angle - start_angle) * (float(j) / 32.0)
+			points.append(center + Vector2(cos(angle), sin(angle)) * radius)
+
+		draw_colored_polygon(points, outcome[IDX_COLOR])
+
+		for j in range(points.size() - 1):
+			draw_line(points[j], points[j + 1], Color.BLACK, 1.0)
+
+	# Draw labels on segments
+	for i in range(wheel_outcomes.size()):
+		var outcome = wheel_outcomes[i]
+		var mid_angle = i * segment_angle + segment_angle / 2.0 + rotation_rad
+		var label_pos = center + Vector2(cos(mid_angle), sin(mid_angle)) * (radius * 0.65)
+
+		draw_string(
+			ThemeDB.fallback_font,
+			label_pos,
+			outcome[IDX_LABEL],
+			HORIZONTAL_ALIGNMENT_CENTER,
+			-1,
+			16,
+			Color.WHITE
+		)
