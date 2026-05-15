@@ -28,7 +28,8 @@
 
 - Wheel 10 loss amount: TBD
 - Multiplier values per wheel: TBD (x2/x3/x4 for now)
-- Wheel costs: TBD (placeholder: 0, 2, 3, 5, 8, 12, 17, 23, 30, 40)
+- Wheel costs: TBD — costs should increase meaningfully for sense of progression
+- Neutral spins cost 0 — to compensate, negative spin effects are reduced
 - Goal: numbers get BIG, costs grow slower than coin accumulation
 
 ## Slot Distribution (Draft — will tune)
@@ -79,6 +80,13 @@
 - Per level: +1 slot to positive outcomes, -1 from neutral/negative
 - Visual: player sees green slots grow on the wheel
 - Display modifier update: slot counts change in probability chart
+
+#### Task 4b: Meaningful wheel unlock visuals
+**Files:** `scripts/main.gd`, `scenes/main.tscn`
+- Unlocked wheels: bright, clickable, shows wheel number
+- Locked wheels: greyed out with "?" icon, visually distinct
+- Just-unlocked wheel: brief glow/pulse animation to draw attention
+- Wheel selector buttons: distinct states (locked / unlocked-not-selected / selected / can't-afford)
 
 ### Phase 2: UI Polish (AI-heavy)
 
