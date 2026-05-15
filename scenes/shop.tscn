@@ -20,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="ShopPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(500, 450)
+custom_minimum_size = Vector2(900, 660)
 layout_mode = 0
 
 [node name="ShopVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
@@ -51,13 +51,17 @@ anchor_right = 1.0
 layout_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
-custom_minimum_size = Vector2(0, 250)
+custom_minimum_size = Vector2(0, 330)
 size_flags_vertical = 3
 
-[node name="SkillsVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer"]
+[node name="SkillsVBox" type="GridContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer"]
 layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 3
 size_flags_vertical = 3
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 88)
+theme_override_font_sizes/font_size = 24
 text = "Continue"

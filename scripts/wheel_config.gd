@@ -24,8 +24,8 @@ static func _mo(label, op_type, value, weight, color):
 # Wheel data — weights sum to 100 per wheel
 static func _get_wheel_1():
 	return [
-		_mo("+1", OP_ADD, 1.0, 60.0, POSITIVE),
-		_mo("0", OP_NONE, 0.0, 40.0, SAFE),
+		_mo("+1", OP_ADD, 1.0, 50.0, POSITIVE),
+		_mo("0", OP_NONE, 0.0, 50.0, SAFE),
 	]
 
 static func _get_wheel_2():
@@ -167,24 +167,26 @@ static func apply_skill_modifiers(outcomes, game):
 	# Lucky Charm: shift weight from 0/- to positive
 	var lucky_level = game.skill_levels.get("lucky_charm", 0)
 	if lucky_level > 0:
-		var shift_total = 2.0 * lucky_level
+		var shift_total = 0.2 * lucky_level
 		var positives = []
-		var negatives = []
+		var sources = []
 		for o in outcomes:
 			if o[IDX_OP] in [OP_ADD, OP_MULTIPLY]:
 				positives.append(o)
 			else:
-				negatives.append(o)
+				sources.append(o)
 
-		if positives.size() > 0:
-			var shift_per_positive = shift_total / positives.size()
-			var available = 0.0
-			for o in negatives:
-				var take = min(o[IDX_WEIGHT], shift_per_positive)
-				o[IDX_WEIGHT] -= take
-				available += take
-			for o in positives:
-				o[IDX_WEIGHT] += available / positives.size()
+		if positives.size() > 0 and sources.size() > 0:
+			var source_weight = 0.0
+			for o in sources:
+				source_weight += o[IDX_WEIGHT]
+			var available = min(shift_total, source_weight)
+			if source_weight > 0.0 and available > 0.0:
+				for o in sources:
+					var take = available * (o[IDX_WEIGHT] / source_weight)
+					o[IDX_WEIGHT] = max(0.0, o[IDX_WEIGHT] - take)
+				for o in positives:
+					o[IDX_WEIGHT] += available / positives.size()
 
 	# Risk Taker: remove 0 outcomes, redistribute weight
 	if "risk_taker" in game.unique_skills:
@@ -205,6 +207,38 @@ static func apply_skill_modifiers(outcomes, game):
 					o[IDX_WEIGHT] += zero_weight * (o[IDX_WEIGHT] / total)
 
 	return outcomes
+
+static func apply_display_modifiers(outcomes, game):
+	for o in outcomes:
+		match o[IDX_OP]:
+			OP_ADD:
+				var magnet = game.skill_levels.get("coin_magnet", 0)
+				var value = round(o[IDX_VALUE] * (1.0 + 0.01 * magnet))
+				if "double_down" in game.unique_skills:
+					value = round(value * 2.0)
+				o[IDX_LABEL] = "+" + _format_number(value)
+			OP_SUBTRACT:
+				var iron = game.skill_levels.get("iron_skin", 0)
+				var value = round(o[IDX_VALUE] * max(0.1, 1.0 - 0.01 * iron))
+				o[IDX_LABEL] = "-" + _format_number(value)
+			OP_MULTIPLY:
+				var sharp = game.skill_levels.get("sharp_mind", 0)
+				var value = o[IDX_VALUE] * (1.0 + 0.025 * sharp)
+				if "double_down" in game.unique_skills:
+					value = 2.0 * value - 1.0
+				if o[IDX_LABEL] != "JACKPOT":
+					o[IDX_LABEL] = "x" + _format_number(value)
+			OP_DIVIDE:
+				if "banker" in game.unique_skills:
+					o[IDX_LABEL] = "-1"
+				else:
+					var iron = game.skill_levels.get("iron_skin", 0)
+					var value = max(1.0, round(o[IDX_VALUE] * max(0.1, 1.0 - 0.01 * iron)))
+					o[IDX_LABEL] = "/" + _format_number(value)
+	return outcomes
+
+static func _format_number(value: float) -> String:
+	return str(int(round(value)))
 
 static func weighted_random(outcomes):
 	var total_weight = 0.0
@@ -228,24 +262,24 @@ static func apply_outcome(outcome, current_coins: int, game) -> int:
 	match op_type:
 		OP_ADD:
 			var magnet = game.skill_levels.get("coin_magnet", 0)
-			result = current_coins + value * (1.0 + 0.10 * magnet)
+			result = current_coins + round(value * (1.0 + 0.01 * magnet))
 		OP_SUBTRACT:
 			var iron = game.skill_levels.get("iron_skin", 0)
-			var iron_mult = max(0.1, 1.0 - 0.10 * iron)
-			result = current_coins - value * iron_mult
+			var iron_mult = max(0.1, 1.0 - 0.01 * iron)
+			result = current_coins - round(value * iron_mult)
 		OP_MULTIPLY:
 			if current_coins == 0:
 				result = value
 			else:
 				var sharp = game.skill_levels.get("sharp_mind", 0)
-				result = current_coins * value * (1.0 + 0.25 * sharp)
+				result = round(current_coins * value * (1.0 + 0.025 * sharp))
 		OP_DIVIDE:
 			if "banker" in game.unique_skills:
 				result = float(current_coins - 1)
 			else:
 				var iron = game.skill_levels.get("iron_skin", 0)
-				var iron_mult = max(0.1, 1.0 - 0.10 * iron)
-				result = current_coins / max(1.0, value * iron_mult)
+				var iron_mult = max(0.1, 1.0 - 0.01 * iron)
+				result = round(current_coins / max(1.0, round(value * iron_mult)))
 		OP_NONE:
 			result = float(current_coins)
 

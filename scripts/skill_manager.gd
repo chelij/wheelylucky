@@ -10,11 +10,11 @@ class SkillDef:
 	var category: String
 
 const UPGRADEABLE_SKILLS: Array[Dictionary] = [
-	{"id": "lucky_charm", "name": "Lucky Charm", "desc": "+2% positive weight per level", "base": 10, "max": 10},
-	{"id": "quick_spin", "name": "Quick Spin", "desc": "-12% spin duration per level", "base": 5, "max": 5},
-	{"id": "iron_skin", "name": "Iron Skin", "desc": "-10% negative effect per level", "base": 8, "max": 10},
-	{"id": "coin_magnet", "name": "Coin Magnet", "desc": "+10% add values per level", "base": 7, "max": 10},
-	{"id": "sharp_mind", "name": "Sharp Mind", "desc": "+25% multiply values per level", "base": 6, "max": 5},
+	{"id": "lucky_charm", "name": "Lucky Charm", "desc": "+0.2% positive weight per level", "base": 10, "max": 10},
+	{"id": "quick_spin", "name": "Quick Spin", "desc": "-1.2% spin duration per level", "base": 5, "max": 5},
+	{"id": "iron_skin", "name": "Iron Skin", "desc": "-1% negative effect per level", "base": 8, "max": 10},
+	{"id": "coin_magnet", "name": "Coin Magnet", "desc": "+1% add values per level", "base": 7, "max": 10},
+	{"id": "sharp_mind", "name": "Sharp Mind", "desc": "+2.5% multiply values per level", "base": 6, "max": 5},
 ]
 
 const UNIQUE_SKILLS: Array[Dictionary] = [
@@ -38,4 +38,5 @@ static func get_purchase_cost(skill: Dictionary, current_level: int) -> int:
 	if skill["max"] == 0:  # unique
 		return skill["base"]
 	var next_level = current_level + 1
-	return int(skill["base"] * (2.0 * next_level - 1.0))
+	var reduced_base = max(1, int(round(float(skill["base"]) / 10.0)))
+	return int(reduced_base * (2.0 * next_level - 1.0))

@@ -54,5 +54,9 @@ horizontal_alignment = 1
 theme_override_font_sizes/font_size = 32
 
 [node name="RestartButton" type="Button" parent="CenterContainer/EndPanel/EndVBox"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 100)
+theme_override_font_sizes/font_size = 24
 text = "Play Again"
+
+[node name="JackpotSound" type="AudioStreamPlayer" parent="."]
+volume_db = -6.0

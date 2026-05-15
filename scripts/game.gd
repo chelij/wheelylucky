@@ -7,7 +7,8 @@ signal coins_changed(new_total)
 signal wheel_changed(current_wheel)
 signal selected_wheel_changed(selected_wheel)
 signal spin_completed
-signal shop_requested
+signal shop_available_changed(is_available)
+signal skills_changed
 signal game_ended(final_coins)
 
 const IDX_LABEL = 0
@@ -26,6 +27,7 @@ var highest_unlocked: int = 1
 var selected_wheel: int = 1
 var total_spins: int = 0
 var cycle_count: int = 1
+var shop_available: bool = false
 const MAX_WHEELS: int = 10
 const SHOP_INTERVAL: int = 5
 
@@ -46,6 +48,7 @@ func reset_run():
 	selected_wheel = 1
 	total_spins = 0
 	cycle_count = 1
+	shop_available = false
 	skill_levels = {
 		"lucky_charm": 0,
 		"quick_spin": 0,
@@ -59,6 +62,8 @@ func reset_run():
 	coins_changed.emit(coins)
 	wheel_changed.emit(selected_wheel)
 	selected_wheel_changed.emit(selected_wheel)
+	shop_available_changed.emit(shop_available)
+	skills_changed.emit()
 
 func get_wheel_cost(wheel_num: int) -> int:
 	return WheelConfig.get_cost(wheel_num)
@@ -81,7 +86,7 @@ func select_wheel(wheel_num: int):
 	selected_wheel_changed.emit(selected_wheel)
 	wheel_changed.emit(selected_wheel)
 
-func spin_wheel(pre_chosen_outcome = null):
+func begin_spin() -> Dictionary:
 	var wheel_num = selected_wheel
 	var cost = get_wheel_cost(wheel_num)
 	if coins < cost:
@@ -89,12 +94,16 @@ func spin_wheel(pre_chosen_outcome = null):
 
 	coins -= cost
 	total_spins += 1
+	coins_changed.emit(coins)
 
 	# Unlock next wheel if we reached a new high
 	if wheel_num >= highest_unlocked and wheel_num < MAX_WHEELS:
 		highest_unlocked = wheel_num + 1
-		if highest_unlocked == MAX_WHEELS + 1:
-			cycle_count += 1
+
+	return {"success": true, "wheel_num": wheel_num, "cost": cost}
+
+func spin_wheel(pre_chosen_outcome = null):
+	var wheel_num = selected_wheel
 
 	# Use the pre-determined visual outcome so pointer matches result
 	var outcome
@@ -111,19 +120,18 @@ func spin_wheel(pre_chosen_outcome = null):
 		return _finish_spin(outcome, delta)
 
 	# Apply result — outcome already has skill modifiers baked in from wheel.gd
-	var delta = outcome[WheelConfig.IDX_VALUE]
-	if outcome[WheelConfig.IDX_OP] == WheelConfig.OP_ADD:
-		pass  # delta is already the value
-	elif outcome[WheelConfig.IDX_OP] == WheelConfig.OP_MULTIPLY:
-		delta = coins * delta - coins
-	elif outcome[WheelConfig.IDX_OP] == WheelConfig.OP_DIVIDE:
-		delta = int(coins / delta) - coins
+	if outcome == null:
+		return {"success": false, "reason": "no_outcome"}
+
+	var delta = WheelConfig.apply_outcome(outcome, coins, self)
 	coins = max(0, coins + delta)
 	coins_changed.emit(coins)
 
 	return _finish_spin(outcome, delta)
 
 func _finish_spin(outcome, delta: int) -> Dictionary:
+	var spun_wheel = selected_wheel
+
 	# Check second wind (once per run)
 	if coins == 0 and not second_wind_used:
 		if "second_wind" in unique_skills:
@@ -131,16 +139,24 @@ func _finish_spin(outcome, delta: int) -> Dictionary:
 			coins = 10
 			coins_changed.emit(coins)
 
-	# Check shop (every 5 spins)
-	var show_shop = (total_spins % SHOP_INTERVAL == 0)
-
 	# Check game end (only on wheel 10 jackpot)
 	var game_over = false
 	var is_jackpot = false
-	if selected_wheel == MAX_WHEELS:
+	if spun_wheel == MAX_WHEELS:
 		if outcome[IDX_OP] == WheelConfig.OP_MULTIPLY and outcome[IDX_LABEL] == "JACKPOT":
 			game_over = true
 			is_jackpot = true
+
+	# Make shop button available every 5 completed spins.
+	if total_spins > 0 and total_spins % SHOP_INTERVAL == 0 and not game_over:
+		shop_available = true
+		shop_available_changed.emit(shop_available)
+
+	if spun_wheel == MAX_WHEELS and not game_over:
+		cycle_count += 1
+		selected_wheel = 1
+		selected_wheel_changed.emit(selected_wheel)
+		wheel_changed.emit(selected_wheel)
 
 	# Save best score on game over
 	if game_over:
@@ -148,9 +164,6 @@ func _finish_spin(outcome, delta: int) -> Dictionary:
 		SaveManager.increment_games_played()
 
 	spin_completed.emit()
-
-	if show_shop and not game_over:
-		shop_requested.emit()
 
 	if game_over:
 		game_ended.emit(coins)
@@ -160,10 +173,17 @@ func _finish_spin(outcome, delta: int) -> Dictionary:
 		"delta": delta,
 		"outcome_label": outcome[IDX_LABEL],
 		"outcome_color": outcome[IDX_COLOR],
-		"show_shop": show_shop,
+		"show_shop": shop_available,
 		"game_over": game_over,
 		"is_jackpot": is_jackpot,
 	}
+
+func consume_shop_available() -> bool:
+	if not shop_available:
+		return false
+	shop_available = false
+	shop_available_changed.emit(shop_available)
+	return true
 
 func buy_skill(skill_name: String, cost: int) -> bool:
 	if coins < cost:
@@ -176,6 +196,7 @@ func buy_skill(skill_name: String, cost: int) -> bool:
 		unique_skills.append(skill_name)
 
 	coins_changed.emit(coins)
+	skills_changed.emit()
 	return true
 
 func use_fortunes_favor() -> bool:

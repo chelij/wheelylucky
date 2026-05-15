@@ -1,13 +1,18 @@
 # scripts/end_screen.gd
 extends CanvasLayer
 
+const SoundFactory = preload("res://scripts/sound_factory.gd")
+
 @onready var title_label: Label = $CenterContainer/EndPanel/EndVBox/TitleLabel
 @onready var final_coins_label: Label = $CenterContainer/EndPanel/EndVBox/FinalCoinsLabel
 @onready var stats_label: Label = $CenterContainer/EndPanel/EndVBox/StatsLabel
 @onready var rating_label: Label = $CenterContainer/EndPanel/EndVBox/RatingLabel
 @onready var restart_button: Button = $CenterContainer/EndPanel/EndVBox/RestartButton
+@onready var jackpot_sound: AudioStreamPlayer = $JackpotSound
 
 func _ready():
+	jackpot_sound.stream = SoundFactory.make_tone(1200.0, 0.55)
+	jackpot_sound.play()
 	final_coins_label.text = "Final Score: " + str(Game.coins) + " coins"
 
 	var skill_count = Game.unique_skills.size()

@@ -4,7 +4,7 @@
 
 **Goal:** Build a 10-wheel spinning coin game with escalating costs, increasing multiplier odds, upgradeable/unique skills, and a dramatic jackpot finale. Game loops through wheels 1-10 repeatedly until the player hits the 1% jackpot on wheel 10.
 
-**Architecture:** Godot 4.x, GDScript. `Game` autoload for global state, `WheelConfig` singleton for wheel data, `WheelScene` for spin visuals, `ShopScene` overlay for upgrades, `ResultPopup` for feedback.
+**Architecture:** Godot 4.x, GDScript. `Game` autoload for global state, `SaveManager` autoload for persistence, `WheelConfig` for wheel data, `Wheel` control for spin visuals/result detection, `Shop` overlay for upgrades, generated raster assets for the background/pointer/UI chrome, and code-drawn wheel sections for exact alignment and odds.
 
 **Tech Stack:** Godot 4.4+ (MIT), GDScript, Git
 
@@ -19,10 +19,13 @@
 | 3 | Multiplier odds | **Increase with wheel number** — multipliers appear mid-game, get more common |
 | 4 | Weight system | **Weighted segments summing to 100** — chance = segment_weight / 100 |
 | 5 | Wheel 10 | **1% jackpot (game ends) / 99% loss (continue from wheel 1)** |
-| 6 | Shop | **Every 5 spins** — spins 5, 10, 15, 20... across all cycles |
-| 7 | Upgrade cost | **base × (2n - 1)** where n = level being purchased (Lv1: ×1, Lv2: ×3, Lv3: ×5...) |
+| 6 | Shop | **Button appears every 5 completed spins** — disappears when opened, reappears after another 5 spins |
+| 7 | Upgrade cost | **reduced_base × (2n - 1)** for upgradeables, where `reduced_base = max(1, round(base / 10))`; unique skills keep fixed base cost |
 | 8 | Runs | **Fresh start** — no meta-progression, each run is independent |
-| 9 | Game loop | **Wheels 1→10→1→10... repeats until jackpot on wheel 10** |
+| 9 | Game loop | **Unlocked wheels can be selected manually; wheel 10 loss returns selection to wheel 1** |
+| 10 | Spin input | **Click any non-button area to spin**; wheel cost is deducted immediately when spin starts; ignored while the wheel is already spinning |
+| 11 | Outcome timing | **Outcome is decided only after the wheel stops**, using the section under the right-side pointer |
+| 12 | Debug keys | `Q` instant spin, `W` add 100 coins |
 
 ---
 
@@ -31,15 +34,17 @@
 ```
 [Start: coins=0, wheel=1]
        ↓
-[Spin wheel N] → [Pay cost] → [Land on outcome] → [Apply modifier to coins]
+[Click non-button area / Q debug] → [Pay cost immediately] → [Spin wheel N]
+       ↓
+[Wheel stops] → [Read right-side pointer section] → [Apply modifier to coins]
        ↓                                              ↓
   [total_spins += 1]                         [Check: coins == 0?]
        ↓                                              ↓
 [total_spins % 5 == 0?] ←── Yes → [Second Wind skill?] ←── [Floor: coins >= 0]
        ↓                                              ↓
-   Yes → [SHOP opens]                    [No: stay at 0, game continues]
+   Yes → [SHOP button appears]            [No: stay at 0, game continues]
        ↓                                              ↓
-[Close shop] → [Continue spinning]
+[Click shop button] → [Shop opens] → [Close shop] → [Continue spinning]
        ↓
 [Wheel 10 landed?] → Yes → [Outcome?]
                            ├── 1% Jackpot → GAME ENDS → End screen
@@ -58,7 +63,7 @@ Exact weights, costs, and values will be determined during a **balance pass** af
 
 | Wheel | Cost | Choices | Multiplier Odds | Notes |
 |-------|------|---------|-----------------|-------|
-| 1 | Free | 2 | 0% | Tutorial, risk-free |
+| 1 | Free | 2 | 0% | Tutorial, risk-free, currently 50/50 `+1` and `0` |
 | 2-3 | Low | 3 | 0% | Build coins, first risk |
 | 4-5 | Medium | 4 | Low | First multipliers, **shop after spin 5** |
 | 6-7 | Higher | 5 | Moderate | More outcome variety |
@@ -105,15 +110,15 @@ Operations applied to coin balance:
 
 ### Upgradeable Skills
 
-Cost formula: `purchase_cost = base_cost × (2n - 1)` where n = level being purchased.
+Cost formula for upgradeable skills: `purchase_cost = max(1, round(base_cost / 10)) × (2n - 1)` where n = level being purchased. Unique skills use their fixed base cost.
 
 | Skill | Effect | Max |
 |-------|--------|-----|
-| Lucky Charm | +weight to positive outcomes per level (shifted from 0/-) | 10 |
-| Quick Spin | -spin duration per level | 5 |
-| Iron Skin | Reduce subtract/divide effect per level | 10 |
-| Coin Magnet | +to all add values per level | 10 |
-| Sharp Mind | +to multiply values per level | 5 |
+| Lucky Charm | +0.2 positive weight per level (shifted from 0/-) | 10 |
+| Quick Spin | -1.2% spin duration per level | 5 |
+| Iron Skin | Reduce subtract/divide effect by 1% per level | 10 |
+| Coin Magnet | +1% to add values per level | 10 |
+| Sharp Mind | +2.5% to multiply values per level | 5 |
 
 ### Unique Skills (one-time, non-upgradeable)
 
@@ -131,23 +136,30 @@ Cost formula: `purchase_cost = base_cost × (2n - 1)` where n = level being purc
 
 ## Shop Mechanics
 
-- **Appears every 5 spins total** (spins 5, 10, 15, 20...)
-- Can appear **multiple times** across wheel cycles (e.g., spin 5 in cycle 1, spin 10 in cycle 1, spin 15 in cycle 2...)
+- **Shop button appears every 5 completed spins total** (spins 5, 10, 15, 20...)
+- Button appears **multiple times** across wheel cycles (e.g., spin 5 in cycle 1, spin 10 in cycle 1, spin 15 in cycle 2...)
+- Button disappears immediately when used and only appears again after another 5 completed spins
 - Shows all available skills player can afford
 - Skills apply immediately
 - Shop is a `CanvasLayer` overlay — blocks interaction, has close button
 
 ---
 
-## Visual Design (MVP)
+## Visual Design (Current)
 
-- **Wheel:** Circular, colored segments drawn via `_draw()`, pointer/arrow at top
-- **Spin animation:** Ease-out cubic, 2-3 full rotations before settling
-- **Coin counter:** Top-center, large, rolls up on change
-- **Wheel progress:** "Wheel 3 / 10" indicator + cycle counter
-- **Result popup:** "+15" (green), "-10" (red), "×3" (gold), "0" (gray)
-- **Wheel 10 special:** Dramatic visual — screen darkens, wheel glows, jackpot triggers particles
-- **Cycle indicator:** "Cycle 2" or similar to show how many times through 1-10 you've gone
+- **Background:** Generated casino-stage raster art at `assets/backgrounds/casino-stage.png`
+- **Wheel:** Code-drawn complete circular rim, fully opaque weighted sections, gold separators, and centered hub. Generated wheel-frame art was removed because it was not a clean circle and caused visual misalignment.
+- **Pointer:** Generated right-side inward pointer at `assets/pointer/pointer.png`; outcome is read from the section under this pointer after stop.
+- **Spin animation:** Random strength every spin: 10-20 full rotations plus random final angle, ease-out quint.
+- **Coin counter:** Generated coin badge at `assets/ui/coin-badge.png` behind the top-right numeric coin label. The label is centered and shows only the number.
+- **Wheel selector:** Numbered native buttons are 2x larger for easier clicking and sit above the wheel.
+- **Shop button:** Hidden until available; uses generated button plate art from `assets/ui/button-plate.png`; button hit area is 2x larger.
+- **Probability chart:** Left-side panel lists the current wheel sections and their modified probabilities, updating when wheel selection or skills change.
+- **Upgrades panel:** Stats are hidden; generated upgrades panel art at `assets/ui/upgrades-panel.png` sits middle-right in a larger frame. Purchased upgrades render as generated badge rows using `assets/ui/upgrade-badge.png` with centered text.
+- **Shop skills:** Shop uses rectangular skill cards with generated icons from `assets/ui/shop-skill-icons.png`, centered skill names, large buy buttons, and hover tooltips describing each skill.
+- **Top title:** Hidden in-game. Native window title still comes from project settings.
+- **Result feedback:** Floating numeric result appears near the wheel after spin.
+- **Debug controls:** `Q` instant spin, `W` add 100 coins.
 
 ---
 
@@ -173,17 +185,32 @@ wheelylucky/
 │   ├── end_screen.gd          # End game screen
 │   └── save_manager.gd        # Save/load (best score)
 ├── assets/
-│   ├── icons/
-│   │   ├── coin.svg
-│   │   └── wheel_pointer.svg
-│   └── sounds/
-│       ├── spin.ogg
-│       ├── result_positive.ogg
-│       ├── result_negative.ogg
-│       ├── jackpot.ogg
-│       └── shop_open.ogg
+│   ├── backgrounds/
+│   │   └── casino-stage.png
+│   ├── pointer/
+│   │   └── pointer.png
+│   └── ui/
+│       ├── button-plate.png
+│       ├── coin-badge.png
+│       ├── shop-skill-icons.png
+│       ├── upgrade-badge.png
+│       └── upgrades-panel.png
 └── exports/
 ```
+
+### Current Asset Manifest
+
+| Asset | Path | Source | Use |
+|-------|------|--------|-----|
+| Casino stage background | `assets/backgrounds/casino-stage.png` | Built-in `image_gen` | Full-screen game background |
+| Wheel pointer | `assets/pointer/pointer.png` | Built-in `image_gen` + chroma-key removal | Right-side inward wheel pointer |
+| Coin badge | `assets/ui/coin-badge.png` | Built-in `image_gen` + chroma-key removal | Top-right coin display backing |
+| Upgrades panel | `assets/ui/upgrades-panel.png` | Built-in `image_gen` + chroma-key removal | Middle-right upgrades backing |
+| Button plate | `assets/ui/button-plate.png` | Built-in `image_gen` + chroma-key removal | Shop/action button art |
+| Purchased upgrade badge | `assets/ui/upgrade-badge.png` | Built-in `image_gen` + chroma-key removal | Individual owned-upgrade rows with centered text |
+| Shop skill icon atlas | `assets/ui/shop-skill-icons.png` | Built-in `image_gen` + chroma-key removal | 5x2 atlas for shop skill card icons |
+
+Audio is generated in memory by `scripts/sound_factory.gd`; no sound files are currently required.
 
 ---
 
