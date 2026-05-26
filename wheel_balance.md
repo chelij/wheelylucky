@@ -1,10 +1,6 @@
 # Wheel Balance Snapshot
 
-This is the restored large-number wheel balance recovered from local unreachable Git blob:
-
-`92c0b5c8f72af71efa018a5d8864c0612ed98241`
-
-Use this file as the source reference if the balance is accidentally overwritten.
+Smoothed cost curve — replaced exponential cliffs (7.8× at W7→W8, 8.6× at W8→W9) with consistent ~3× growth throughout. All constraints preserved: green > cost on every wheel, multiplier guarantees 1 next-wheel spin, losses are survivable.
 
 ## Wheel Constants
 
@@ -15,36 +11,67 @@ Use this file as the source reference if the balance is accidentally overwritten
 
 ## Costs
 
-| Wheel | Cost |
-| --- | ---: |
-| W1 | 0 |
-| W2 | 25 |
-| W3 | 75 |
-| W4 | 300 |
-| W5 | 1200 |
-| W6 | 5000 |
-| W7 | 18000 |
-| W8 | 140000 |
-| W9 | 1200000 |
-| W10 | 12000000 |
+| Wheel | Cost | Growth |
+| --- | ---: | ---: |
+| W1 | 0 | — |
+| W2 | 25 | ×inf |
+| W3 | 75 | ×3.00 |
+| W4 | 250 | ×3.33 |
+| W5 | 800 | ×3.20 |
+| W6 | 2,500 | ×3.12 |
+| W7 | 7,500 | ×3.00 |
+| W8 | 22,000 | ×2.93 |
+| W9 | 65,000 | ×2.95 |
+| W10 | 200,000 | ×3.08 |
 
 ## Outcomes
 
-| Wheel | Spin Cost | Outcomes |
-| --- | ---: | --- |
-| W1 | 0 | `+25` x60, `0` x60 |
-| W2 | 25 | `+60` x50, `-1` x30, `x9` x10, `0` x30 |
-| W3 | 75 | `+160` x51, `-8` x35, `x12` x9, `0` x25 |
-| W4 | 300 | `+450` x52, `-49` x40, `x12` x8, `0` x20 |
-| W5 | 1200 | `+1800` x53, `-262` x45, `x14` x7, `0` x15 |
-| W6 | 5000 | `+7500` x54, `-1375` x50, `x16` x6, `0` x10 |
-| W7 | 18000 | `+27000` x55, `-5962` x50, `x18` x5, `0` x10 |
-| W8 | 140000 | `+190000` x56, `-54250` x55, `x18` x4, `0` x5 |
-| W9 | 1200000 | `+1700000` x58, `-532500` x55, `x20` x2, `0` x5 |
-| W10 | 12000000 | `-6000000` x20, `JACKPOT` x1, `-6000000` x20, `0` x79 |
+| Wheel | Spin Cost | Outcomes | Multiplier check |
+| --- | ---: | --- | --- |
+| W1 | 0 | `+25` x60, `0` x60 | — |
+| W2 | 25 | `+91` x50, `-2` x30, `x3` x10, `0` x30 | 3×25=75 >= 75 |
+| W3 | 75 | `+225` x51, `-5` x35, `x4` x9, `0` x25 | 4×75=300 >= 250 |
+| W4 | 250 | `+668` x52, `-18` x40, `x4` x8, `0` x20 | 4×250=1,000 >= 800 |
+| W5 | 800 | `+2,006` x53, `-60` x45, `x4` x7, `0` x15 | 4×800=3,200 >= 2,500 |
+| W6 | 2,500 | `+6,019` x54, `-200` x50, `x3` x6, `0` x10 | 3×2,500=7,500 >= 7,500 |
+| W7 | 7,500 | `+17,298` x55, `-638` x50, `x3` x5, `0` x10 | 3×7,500=22,500 >= 22,000 |
+| W8 | 22,000 | `+49,016` x56, `-1,980` x55, `x3` x4, `0` x5 | 3×22,000=66,000 >= 65,000 |
+| W9 | 65,000 | `+140,568` x58, `-6,175` x55, `x4` x2, `0` x5 | 4×65,000=260,000 >= 200,000 |
+| W10 | 200,000 | `-100,000` x40, `JACKPOT` x1, `0` x79 | 10×200,000=2,000,000 |
 
 ## Verification Notes
 
-- `scripts/verify_polish.gd` should check that each paid wheel has at least one positive outcome path that can cover the spin cost.
-- Do not require every flat Plus outcome to exceed the spin cost; W5, W6, W7, W8, and W9 intentionally rely on multiplier outcomes for cost-covering wins.
-- `python3 scripts/sim_playtime.py 1 --gd-only` should parse the same values from `scripts/wheel_config.gd`.
+- Every wheel has exactly 120 slots.
+- Green outcome always exceeds spin cost: net per green hit is always positive and grows across tiers (W2 +66 → W9 +75,568).
+- Losses scale gradually (3%-8% of green net), never exceeding one green hit. No wipeout risk.
+- Multiplier always pays from spin cost, guaranteeing at least 1 next-wheel spin on every multiplier hit.
+- Five greens minus two losses funds at least one next-wheel spin on every tier.
+- EV per spin stays positive throughout; ~4 spins to advance early wheels, ramping to ~45 at W9.
+
+## Cost Curve Comparison (Old → New)
+
+| Wheel | Old Cost | New Cost | Old Growth | New Growth |
+| --- | ---: | ---: | ---: | ---: |
+| W1 | 0 | 0 | — | — |
+| W2 | 25 | 25 | — | — |
+| W3 | 75 | 75 | ×3.0 | ×3.00 |
+| W4 | 300 | 250 | ×4.0 | ×3.33 |
+| W5 | 1,200 | 800 | ×4.0 | ×3.20 |
+| W6 | 5,000 | 2,500 | ×4.2 | ×3.12 |
+| W7 | 18,000 | 7,500 | ×3.6 | ×3.00 |
+| W8 | 140,000 | 22,000 | ×7.8 | ×2.93 |
+| W9 | 1,200,000 | 65,000 | ×8.6 | ×2.95 |
+| W10 | 12,000,000 | 200,000 | ×10.0 | ×3.08 |
+
+## EV Summary (per spin)
+
+| Wheel | EV/Spin | Spins to Advance | Green Net | Loss (% of net) |
+| --- | ---: | ---: | ---: | ---: |
+| W2 | +19 | ~4 to W3 | +66 | -2 (3%) |
+| W3 | +42 | ~6 to W4 | +150 | -5 (3%) |
+| W4 | +100 | ~8 to W5 | +418 | -18 (4%) |
+| W5 | +250 | ~10 to W6 | +1,206 | -60 (5%) |
+| W6 | +500 | ~15 to W7 | +3,519 | -200 (6%) |
+| W7 | +1,100 | ~20 to W8 | +9,798 | -638 (7%) |
+| W8 | +2,167 | ~30 to W9 | +27,016 | -1,980 (7%) |
+| W9 | +4,444 | ~45 to W10 | +75,568 | -6,175 (8%) |
