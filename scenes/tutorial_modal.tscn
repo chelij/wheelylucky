@@ -1,0 +1,771 @@
+[gd_scene format=3 uid="uid://0l3r1dxqs7na"]
+
+[ext_resource type="Script" uid="uid://gfy3taxes62f" path="res://scripts/tutorial_modal.gd" id="1_tutorial"]
+[ext_resource type="Texture2D" uid="uid://bvjx277tacrt" path="res://assets/ui/prev-wheel.png" id="2_prev"]
+[ext_resource type="Texture2D" uid="uid://c4dhqtgk0mkjx" path="res://assets/ui/next-wheel.png" id="3_next"]
+[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="4_skill_icons"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 30.0
+content_margin_top = 22.0
+content_margin_right = 30.0
+content_margin_bottom = 22.0
+bg_color = Color(0.07, 0.02, 0.045, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.74, 0.18, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_page"]
+content_margin_left = 26.0
+content_margin_top = 22.0
+content_margin_right = 26.0
+content_margin_bottom = 22.0
+bg_color = Color(0.035, 0.012, 0.03, 0.62)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.74, 0.18, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lucky_charm"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(0, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_quick_spin"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(256, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_discount_card"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(512, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_coin_magnet"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(768, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sharp_mind"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1024, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_free_gift"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1280, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_shop_savvy"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(0, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_market_bell"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(256, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_collector"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(512, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_double_down"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(768, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_risk_taker"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1024, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fortunes_favor"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1280, 256, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_banker"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(0, 512, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_second_wind"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(256, 512, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_randomizer"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(512, 512, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_momentum"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(768, 512, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_golden_ticket"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1024, 512, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_double_spin"]
+atlas = ExtResource("4_skill_icons")
+region = Rect2(1280, 512, 256, 256)
+
+[node name="TutorialModal" type="CanvasLayer" unique_id=238423856]
+layer = 40
+script = ExtResource("1_tutorial")
+
+[node name="Shade" type="ColorRect" parent="." unique_id=781802559]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.52)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1370767752]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer" unique_id=1060809078]
+custom_minimum_size = Vector2(860, 600)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel" unique_id=557896049]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/Panel/VBox" unique_id=706344612]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 28
+text = "How to Play"
+horizontal_alignment = 1
+
+[node name="PageTitleLabel" type="Label" parent="CenterContainer/Panel/VBox" unique_id=1240846653]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PagePanel" type="PanelContainer" parent="CenterContainer/Panel/VBox" unique_id=126115654]
+custom_minimum_size = Vector2(760, 360)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+
+[node name="PageStack" type="Control" parent="CenterContainer/Panel/VBox/PagePanel" unique_id=221027936]
+layout_mode = 2
+
+[node name="BasicsPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=754730041]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="GoalTitle" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/BasicsPage" unique_id=1110536378]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Goal"
+
+[node name="GoalBody" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/BasicsPage" unique_id=445430395]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "* Reach Wheel 10 and land on Jackpot.
+* Build enough coins and skills to afford riskier wheels without running out."
+autowrap_mode = 3
+
+[node name="SpinningTitle" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/BasicsPage" unique_id=61399312]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Spinning"
+
+[node name="SpinningBody" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/BasicsPage" unique_id=1040770193]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "* Click the wheel area to spin the selected wheel.
+* Each spin pays the result under the pointer after the wheel stops.
+* Plus adds coins, Minus removes coins, Multiply pays from spin cost, Divide cuts coins, and None does nothing."
+autowrap_mode = 3
+
+[node name="WheelsShopsPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=1754438539]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="ChoosingTitle" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/WheelsShopsPage" unique_id=421958955]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Choosing Wheels"
+
+[node name="ChoosingBody" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/WheelsShopsPage" unique_id=560917449]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "* Use the wheel arrows to move between unlocked wheels.
+* Higher wheels cost more to spin and carry larger rewards and risks.
+* The current spin cost is shown under the wheel number. Wheel 1 is free."
+autowrap_mode = 3
+
+[node name="ShopsTitle" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/WheelsShopsPage" unique_id=405581640]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Shops"
+
+[node name="ShopsBody" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/WheelsShopsPage" unique_id=1154904834]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "* After spins, a shop may appear if at least one offered skill is affordable.
+* Buy skills to change odds, payouts, costs, shop offers, or wheel behavior."
+autowrap_mode = 3
+
+[node name="OutcomeNamesPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=1505155516]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="ResultsTitle" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/OutcomeNamesPage" unique_id=444215367]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Results"
+
+[node name="ResultsBody" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/OutcomeNamesPage" unique_id=1943598597]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "* Plus outcomes add coins.
+* Minus outcomes subtract coins.
+* Multiply outcomes pay a multiplier from spin cost.
+* Divide outcomes reduce current coins.
+* None outcomes have no coin change.
+* Jackpot on Wheel 10 wins the run."
+autowrap_mode = 3
+
+[node name="UpgradeableSkillsPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=2040049896]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="UpgradeableSkillsGrid" type="GridContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage" unique_id=1185847963]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="LuckyCharmIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=593918577]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_lucky_charm")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LuckyCharmName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=169022581]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Lucky Charm"
+vertical_alignment = 1
+
+[node name="LuckyCharmDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=158396023]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "+1 Plus slot per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="QuickSpinIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1511313319]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_quick_spin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="QuickSpinName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1270436486]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Quick Spin"
+vertical_alignment = 1
+
+[node name="QuickSpinDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=133854731]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Faster spin duration per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DiscountCardIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1738543230]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_discount_card")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DiscountCardName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=789160952]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Discount Card"
+vertical_alignment = 1
+
+[node name="DiscountCardDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1106871451]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "-1.5% spin cost per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="CoinMagnetIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=908376873]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_coin_magnet")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CoinMagnetName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1499051218]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Coin Magnet"
+vertical_alignment = 1
+
+[node name="CoinMagnetDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1985516954]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "+10% Plus values per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="SharpMindIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1688703878]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_sharp_mind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SharpMindName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1638741916]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sharp Mind"
+vertical_alignment = 1
+
+[node name="SharpMindDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=663023102]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "+25% Multiply values per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="FreeGiftIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1886863681]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_free_gift")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FreeGiftName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1495410091]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Free Gift"
+vertical_alignment = 1
+
+[node name="FreeGiftDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=2033492294]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "None/Minus outcomes refund 2% spin cost per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ShopSavvyIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=48376692]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_shop_savvy")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShopSavvyName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=329763547]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Shop Savvy"
+vertical_alignment = 1
+
+[node name="ShopSavvyDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=142569863]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Shop prices are 2% cheaper per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="MarketBellIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=399692033]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_market_bell")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MarketBellName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1976699160]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Market Bell"
+vertical_alignment = 1
+
+[node name="MarketBellDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=165709789]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "+1% shop chance and miss bonus per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="CollectorIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1176803212]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_collector")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CollectorName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=321382964]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Collector"
+vertical_alignment = 1
+
+[node name="CollectorDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UpgradeableSkillsPage/UpgradeableSkillsGrid" unique_id=1984405930]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Uniques are 10% more likely to appear per level"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="UniqueSkillsPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=1590406504]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="UniqueSkillsGrid" type="GridContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage" unique_id=250042882]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="DoubleDownIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=466949089]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_double_down")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DoubleDownName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1323154655]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Double Down"
+vertical_alignment = 1
+
+[node name="DoubleDownDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=756677161]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "2x all wheel outcomes and spin costs"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="RiskTakerIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1863702388]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_risk_taker")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RiskTakerName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1860950614]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Risk Taker"
+vertical_alignment = 1
+
+[node name="RiskTakerDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1884104160]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "W1 is all Plus with 0 spin time. Remove None outside final wheel"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="FortunesFavorIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=221436431]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_fortunes_favor")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FortunesFavorName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=59916987]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Fortune's Favor"
+vertical_alignment = 1
+
+[node name="FortunesFavorDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=837363348]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Minus hits push the result 3 slots farther"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="BankerIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=120238342]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_banker")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BankerName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=590699830]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Banker"
+vertical_alignment = 1
+
+[node name="BankerDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1042739383]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Earn 10% interest after each spin"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="SecondWindIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=7492758]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_second_wind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SecondWindName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=468254685]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Second Wind"
+vertical_alignment = 1
+
+[node name="SecondWindDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1106735161]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "50% chance to refund spin cost if coin total goes below wheel spin cost"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="RandomizerIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1841705274]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_randomizer")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RandomizerName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=995526631]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Randomizer"
+vertical_alignment = 1
+
+[node name="RandomizerDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1812834863]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Randomizes all outcome positions"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="MomentumIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=926337046]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_momentum")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MomentumName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1513482158]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Momentum"
+vertical_alignment = 1
+
+[node name="MomentumDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=853559029]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Plus spins add 2 Plus slots up to 20. Minus spins reset"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="GoldenTicketIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1420010319]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_golden_ticket")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldenTicketName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1634348534]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Golden Ticket"
+vertical_alignment = 1
+
+[node name="GoldenTicketDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1858515025]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Shops offer 1 extra skill for purchase"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DoubleSpinIcon" type="TextureRect" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=530673164]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = SubResource("AtlasTexture_double_spin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DoubleSpinName" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1332553851]
+custom_minimum_size = Vector2(145, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Double Spin"
+vertical_alignment = 1
+
+[node name="DoubleSpinDesc" type="Label" parent="CenterContainer/Panel/VBox/PagePanel/PageStack/UniqueSkillsPage/UniqueSkillsGrid" unique_id=1415731170]
+custom_minimum_size = Vector2(500, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Pointer now also spins"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="NavRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox" unique_id=1991432544]
+custom_minimum_size = Vector2(760, 50)
+layout_mode = 2
+theme_override_constants/separation = 34
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="CenterContainer/Panel/VBox/NavRow" unique_id=197568816]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("2_prev")
+flat = true
+expand_icon = true
+
+[node name="PageIndicatorLabel" type="Label" parent="CenterContainer/Panel/VBox/NavRow" unique_id=1308560222]
+custom_minimum_size = Vector2(150, 42)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextButton" type="Button" parent="CenterContainer/Panel/VBox/NavRow" unique_id=524555839]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("3_next")
+flat = true
+expand_icon = true
+
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/VBox" unique_id=195090572]
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "Back"

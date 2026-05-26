@@ -1,67 +1,506 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://codceu42lqc02"]
 
-[ext_resource type="Script" path="res://scripts/shop.gd" id="1_shop"]
+[ext_resource type="Script" uid="uid://bag0b2eui4tr4" path="res://scripts/shop.gd" id="1_shop"]
+[ext_resource type="Texture2D" uid="uid://clvtdbhbfrbb7" path="res://assets/ui/shop-card.png" id="2_shop_card"]
+[ext_resource type="Texture2D" uid="uid://cwlcw4hrfckw6" path="res://assets/ui/bought-overlay.png" id="3_bought_overlay"]
+[ext_resource type="Texture2D" uid="uid://byp2fvdyk8lo2" path="res://assets/ui/buy-button.png" id="4_buy_button"]
+[ext_resource type="Texture2D" uid="uid://bnlt0nagi4ohg" path="res://assets/ui/shop-panel.png" id="5_shop_panel"]
+[ext_resource type="Texture2D" uid="uid://dvxrfxhj6nld4" path="res://assets/ui/shop-close-button.png" id="6_shop_close_button"]
+[ext_resource type="Texture2D" uid="uid://bilhj2dhg48at" path="res://assets/ui/coin.png" id="7_coin"]
+[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="8_skill_icons"]
+[ext_resource type="AudioStream" uid="uid://cja78cdhqfna3" path="res://assets/sounds/shop-close.wav" id="9_shop_close_sound"]
 
-[node name="Shop" type="CanvasLayer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_card"]
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+texture = ExtResource("2_shop_card")
+texture_margin_left = 18.0
+texture_margin_top = 18.0
+texture_margin_right = 18.0
+texture_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_buy"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+texture = ExtResource("4_buy_button")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[node name="Shop" type="CanvasLayer" unique_id=796475366]
 layer = 10
 script = ExtResource("1_shop")
+shop_panel_texture = ExtResource("5_shop_panel")
+shop_close_button_texture = ExtResource("6_shop_close_button")
+skill_icon_atlas = ExtResource("8_skill_icons")
 
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
+[node name="Background" type="ColorRect" parent="." unique_id=756631508]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.85)
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1278465169]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="ShopPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(900, 660)
-layout_mode = 0
+[node name="ShopPanel" type="PanelContainer" parent="CenterContainer" unique_id=1341614519]
+custom_minimum_size = Vector2(980, 620)
+layout_mode = 2
 
-[node name="ShopVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="ShopVBox" type="VBoxContainer" parent="CenterContainer/ShopPanel" unique_id=1851035500]
+layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox" unique_id=2019410575]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 42
 text = "SHOP"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 
-[node name="CoinsLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox"]
+[node name="CoinsLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox" unique_id=1531243001]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 26
 text = "Coins: 0"
 horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/ShopPanel/ShopVBox" unique_id=1433821945]
+visible = false
+layout_mode = 2
+
+[node name="ScrollContainer" type="CenterContainer" parent="CenterContainer/ShopPanel/ShopVBox" unique_id=154900983]
+custom_minimum_size = Vector2(0, 336)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillsVBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer" unique_id=2087200975]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="SkillCard1" type="PanelContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox" unique_id=46742880]
+custom_minimum_size = Vector2(224, 318)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_card")
+
+[node name="Content" type="Control" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1" unique_id=2074450397]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content" unique_id=1051457698]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 0
+offset_left = 54.0
+offset_top = 20.0
+offset_right = 134.0
+offset_bottom = 100.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content" unique_id=476398675]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 178.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/ShopPanel/ShopVBox"]
-layout_mode = 1
-anchor_right = 1.0
+[node name="DescriptionLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content" unique_id=122299090]
+custom_minimum_size = Vector2(168, 58)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 144.0
+offset_right = 178.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(0.88, 0.82, 0.72, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+justification_flags = 201
+clip_text = true
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/ShopPanel/ShopVBox"]
+[node name="BuyButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content" unique_id=14856924]
+custom_minimum_size = Vector2(176, 44)
+layout_mode = 0
+offset_left = 6.0
+offset_top = 230.0
+offset_right = 182.0
+offset_bottom = 274.0
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_colors/font_disabled_color = Color(0.72, 0.68, 0.64, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxTexture_buy")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_buy")
+theme_override_styles/hover = SubResource("StyleBoxTexture_buy")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_buy")
+
+[node name="BuyContent" type="HBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton" unique_id=964289683]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-custom_minimum_size = Vector2(0, 330)
-size_flags_vertical = 3
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
 
-[node name="SkillsVBox" type="GridContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer"]
+[node name="BuyText" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton/BuyContent" unique_id=1588987962]
 layout_mode = 2
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
-columns = 3
-size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 20
+vertical_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox"]
-custom_minimum_size = Vector2(0, 88)
-theme_override_font_sizes/font_size = 24
+[node name="CoinIcon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton/BuyContent" unique_id=1878924096]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("7_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BoughtOverlay" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1" unique_id=776754222]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_bought_overlay")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillCard2" type="PanelContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox" unique_id=1817082222]
+custom_minimum_size = Vector2(224, 318)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_card")
+
+[node name="Content" type="Control" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2" unique_id=929044534]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content" unique_id=976972902]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 0
+offset_left = 54.0
+offset_top = 20.0
+offset_right = 134.0
+offset_bottom = 100.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content" unique_id=1993668716]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 178.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DescriptionLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content" unique_id=777500001]
+custom_minimum_size = Vector2(168, 58)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 144.0
+offset_right = 178.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(0.88, 0.82, 0.72, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+justification_flags = 201
+clip_text = true
+
+[node name="BuyButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content" unique_id=8076361]
+custom_minimum_size = Vector2(176, 44)
+layout_mode = 0
+offset_left = 6.0
+offset_top = 230.0
+offset_right = 182.0
+offset_bottom = 274.0
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_colors/font_disabled_color = Color(0.72, 0.68, 0.64, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxTexture_buy")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_buy")
+theme_override_styles/hover = SubResource("StyleBoxTexture_buy")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_buy")
+
+[node name="BuyContent" type="HBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content/BuyButton" unique_id=221676255]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="BuyText" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content/BuyButton/BuyContent" unique_id=1212741230]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 20
+vertical_alignment = 1
+
+[node name="CoinIcon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content/BuyButton/BuyContent" unique_id=924204105]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("7_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BoughtOverlay" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2" unique_id=1260200906]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_bought_overlay")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillCard3" type="PanelContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox" unique_id=2108956741]
+custom_minimum_size = Vector2(224, 318)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_card")
+
+[node name="Content" type="Control" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3" unique_id=635320827]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content" unique_id=864586021]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 0
+offset_left = 54.0
+offset_top = 20.0
+offset_right = 134.0
+offset_bottom = 100.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content" unique_id=1203213198]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 178.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DescriptionLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content" unique_id=995322878]
+custom_minimum_size = Vector2(168, 58)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 144.0
+offset_right = 178.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(0.88, 0.82, 0.72, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+justification_flags = 201
+clip_text = true
+
+[node name="BuyButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content" unique_id=718008421]
+custom_minimum_size = Vector2(176, 44)
+layout_mode = 0
+offset_left = 6.0
+offset_top = 230.0
+offset_right = 182.0
+offset_bottom = 274.0
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_colors/font_disabled_color = Color(0.72, 0.68, 0.64, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxTexture_buy")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_buy")
+theme_override_styles/hover = SubResource("StyleBoxTexture_buy")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_buy")
+
+[node name="BuyContent" type="HBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content/BuyButton" unique_id=2033452869]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="BuyText" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content/BuyButton/BuyContent" unique_id=1663125519]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 20
+vertical_alignment = 1
+
+[node name="CoinIcon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content/BuyButton/BuyContent" unique_id=1196270954]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("7_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BoughtOverlay" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3" unique_id=1193014886]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_bought_overlay")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillCard4" type="PanelContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox" unique_id=399616079]
+custom_minimum_size = Vector2(224, 318)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_card")
+
+[node name="Content" type="Control" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4" unique_id=466936311]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content" unique_id=1735054530]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 0
+offset_left = 54.0
+offset_top = 20.0
+offset_right = 134.0
+offset_bottom = 100.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content" unique_id=1057754412]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 178.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DescriptionLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content" unique_id=1262655585]
+custom_minimum_size = Vector2(168, 58)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 144.0
+offset_right = 178.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(0.88, 0.82, 0.72, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+justification_flags = 201
+clip_text = true
+
+[node name="BuyButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content" unique_id=1331865533]
+custom_minimum_size = Vector2(176, 44)
+layout_mode = 0
+offset_left = 6.0
+offset_top = 230.0
+offset_right = 182.0
+offset_bottom = 274.0
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_colors/font_disabled_color = Color(0.72, 0.68, 0.64, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxTexture_buy")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_buy")
+theme_override_styles/hover = SubResource("StyleBoxTexture_buy")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_buy")
+
+[node name="BuyContent" type="HBoxContainer" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content/BuyButton" unique_id=1804655422]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="BuyText" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content/BuyButton/BuyContent" unique_id=568691490]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 20
+vertical_alignment = 1
+
+[node name="CoinIcon" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content/BuyButton/BuyContent" unique_id=1921723244]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("7_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BoughtOverlay" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4" unique_id=1567775880]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_bought_overlay")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/ShopPanel/ShopVBox" unique_id=1193919139]
+custom_minimum_size = Vector2(360, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+flat = true
+
+[node name="ButtonArt" type="TextureRect" parent="CenterContainer/ShopPanel/ShopVBox/ContinueButton" unique_id=315336760]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_shop_close_button")
+expand_mode = 1
+
+[node name="ButtonLabel" type="Label" parent="CenterContainer/ShopPanel/ShopVBox/ContinueButton" unique_id=348090104]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.96, 0.82, 1)
+theme_override_colors/font_shadow_color = Color(0.18, 0.04, 0.02, 0.95)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 30
 text = "Continue"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseSound" type="AudioStreamPlayer" parent="." unique_id=1505287631]
+stream = ExtResource("9_shop_close_sound")
+volume_db = -6.0

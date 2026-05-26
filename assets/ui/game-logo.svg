@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+  <defs>
+    <linearGradient id="gold" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff4a8"/>
+      <stop offset="0.45" stop-color="#ffc933"/>
+      <stop offset="1" stop-color="#a94c08"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#5f001b"/>
+      <stop offset="0.55" stop-color="#c70f22"/>
+      <stop offset="1" stop-color="#42000f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="9" flood-color="#1a0004" flood-opacity="0.85"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <ellipse cx="450" cy="220" rx="370" ry="126" fill="#160009" opacity="0.72"/>
+    <path d="M96 205 C150 98 286 46 450 46 C614 46 750 98 804 205 C750 312 614 364 450 364 C286 364 150 312 96 205 Z" fill="url(#red)" stroke="url(#gold)" stroke-width="12"/>
+    <path d="M126 205 C176 120 302 78 450 78 C598 78 724 120 774 205 C724 290 598 332 450 332 C302 332 176 290 126 205 Z" fill="#25000c" stroke="#ffdc55" stroke-width="4" opacity="0.92"/>
+    <circle cx="174" cy="205" r="42" fill="#32000f" stroke="url(#gold)" stroke-width="7"/>
+    <circle cx="174" cy="205" r="23" fill="none" stroke="#f7c53a" stroke-width="5"/>
+    <path d="M174 159 L174 251 M128 205 L220 205 M142 173 L206 237 M206 173 L142 237" stroke="#f7c53a" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="726" cy="205" r="42" fill="#32000f" stroke="url(#gold)" stroke-width="7"/>
+    <circle cx="726" cy="205" r="23" fill="none" stroke="#f7c53a" stroke-width="5"/>
+    <path d="M726 159 L726 251 M680 205 L772 205 M694 173 L758 237 M758 173 L694 237" stroke="#f7c53a" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <text x="450" y="188" text-anchor="middle" font-family="Noto Sans, DejaVu Sans, Arial, sans-serif" font-size="92" font-weight="900" letter-spacing="4" fill="#4b0903" stroke="#4b0903" stroke-width="16" paint-order="stroke">WHEELY</text>
+    <text x="450" y="188" text-anchor="middle" font-family="Noto Sans, DejaVu Sans, Arial, sans-serif" font-size="92" font-weight="900" letter-spacing="4" fill="url(#gold)" stroke="#fff1a5" stroke-width="2" paint-order="stroke" filter="url(#glow)">WHEELY</text>
+    <text x="450" y="285" text-anchor="middle" font-family="Noto Sans, DejaVu Sans, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="7" fill="#4b0903" stroke="#4b0903" stroke-width="16" paint-order="stroke">LUCKY</text>
+    <text x="450" y="285" text-anchor="middle" font-family="Noto Sans, DejaVu Sans, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="7" fill="url(#gold)" stroke="#fff1a5" stroke-width="2" paint-order="stroke" filter="url(#glow)">LUCKY</text>
+    <path d="M396 108 L450 84 L504 108 L450 132 Z" fill="#0b584f" stroke="url(#gold)" stroke-width="6"/>
+    <path d="M396 330 L450 354 L504 330 L450 306 Z" fill="#0b584f" stroke="url(#gold)" stroke-width="6"/>
+  </g>
+</svg>

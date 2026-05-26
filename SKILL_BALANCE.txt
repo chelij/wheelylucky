@@ -1,0 +1,126 @@
+Wheely Lucky Skill Balance Sheet
+
+Edit this file when you want to propose balance changes. Codex can read it and
+apply the values back into scripts/skill_effects.gd and related skill text.
+
+Numbers written as decimals are fractions:
+0.01 = 1%
+0.10 = 10%
+0.25 = 25%
+
+Upgrade Costs
+- First upgrade level cost: 25
+- Upgrade cost formula through level 10: 25 * level^2
+- Extra expensive after level: 10
+- After level 10 formula: 25 * level^2 * (1 + (level - 10)^2)
+
+Unique Costs
+- First unique cost: 500
+- Unique cost formula: 500 * owned_unique_count^2
+
+Upgradeable Skills
+
+Lucky Charm
+- Current value: 1 Plus or Multiply slot per level
+- Effect: each level moves 1 Minus slot into a Plus outcome.
+- Code key: LUCKY_CHARM_POSITIVE_SLOTS_PER_LEVEL
+
+Quick Spin
+- Current value: 0.90 duration multiplier per level
+- Effect: each level multiplies spin duration by 0.90. Lower values are faster.
+- Example: level 1 is 10% faster; level 5 is about 41% faster.
+- Code key: QUICK_SPIN_DURATION_MULTIPLIER_PER_LEVEL
+
+Discount Card
+- Current value: 0.015 spin cost discount per level
+- Effect: each level Minusuces wheel spin costs by 1.5%.
+- Example: level 10 makes spins 15% cheaper.
+- Code key: DISCOUNT_CARD_SPIN_COST_DISCOUNT_PER_LEVEL
+
+Coin Magnet
+- Current value: 0.10 Plus add value per level
+- Effect: each level increases flat Plus coin gains by 10%.
+- Example: level 5 makes Plus add outcomes pay 50% more.
+- Code key: COIN_MAGNET_ADD_VALUE_PER_LEVEL
+
+Sharp Mind
+- Current value: 0.25 jackpot multiplier payout per level
+- Effect: each level increases jackpot multiplier payouts by 25%.
+- Example: level 4 makes jackpot multiplier payouts 100% stronger.
+- Code key: SHARP_MIND_MULTIPLY_VALUE_PER_LEVEL
+
+Free Gift
+- Current value: 0.02 None/Minus spin cost refund per level
+- Effect: None or Minus outcomes refund 2% of the spin cost per level.
+- Example: level 10 refunds 20% of spin cost after None or Minus outcomes.
+- Code key: FREE_GIFT_REFUND_PER_LEVEL
+
+Shop Savvy
+- Current value: 0.02 shop price discount per level
+- Effect: each level Minusuces shop purchase prices by 2%.
+- Example: level 10 makes shop purchases 20% cheaper.
+- Code key: SHOP_SAVVY_PRICE_DISCOUNT_PER_LEVEL
+
+Market Bell
+- Current base value: 0.10 shop chance
+- Current level value: 0.01 shop chance per level
+- Effect: base shop chance starts at 10%. Each level adds 1% to the shop chance
+  step and miss bonus step.
+- Code keys: MARKET_BELL_BASE_SHOP_CHANCE,
+  MARKET_BELL_SHOP_CHANCE_PER_LEVEL
+
+Collector
+- Current value: 0.10 unique offer chance per level
+- Effect: each level increases the chance that a shop offer includes a unique by
+  10%, before the owned-unique decay is applied.
+- Code key: COLLECTOR_UNIQUE_CHANCE_PER_LEVEL
+
+Unique Skills
+
+Double Down
+- Current value: fixed behavior
+- Effect: doubles coin modifiers and spin costs except W10.
+- Code location: scripts/game.gd and scripts/wheel_config.gd
+
+Risk Taker
+- Current W2-W9 behavior: remove None outcomes and Minusistribute those slots.
+- Current W1 behavior: wheel becomes all Plus and resolves with 0 spin time.
+- Current W10 value: 0.10 None-to-jackpot conversion rate
+- Effect on W10: converts 10% of None slots into jackpot slots.
+- Code key: RISK_TAKER_W10_ZERO_TO_JACKPOT_RATE
+
+Fortune's Favor
+- Current value: 3 slots
+- Effect: on every spin, if a Minus outcome is hit, the pointer result is pushed
+  3 slots farther.
+- Code location: scripts/wheel.gd
+
+Banker
+- Current value: 0.10 interest
+- Effect: after each spin, gain 10% interest on current coins.
+- Code location: scripts/game.gd
+
+Second Wind
+- Current value: 0.50 refund chance
+- Effect: once per spin, if coins hit less than spun wheel cost after a spin, flip a coin. if heads: refund spin cost.
+- Code location: scripts/game.gd
+
+Randomizer
+- Current value: fixed behavior
+- Effect: randomizes outcome order without changing odds every spin
+- Code location: scripts/wheel_config.gd
+
+Momentum
+- Current value: 2 Plus slots per Plus spin, max 20 added Plus slots
+- Effect: Plus spins add Plus slots; Minus spins reset the bonus.
+- Code location: scripts/game.gd and scripts/wheel_config.gd
+
+Multiplyen Ticket
+- Current value: +1 shop offer
+- Effect: shops offer 4 skills instead of 3.
+- Code location: scripts/game.gd
+
+Double Spin
+- Current value: fixed behavior
+- Effect: the pointer spins against the wheel.
+- Code location: scripts/wheel.gd

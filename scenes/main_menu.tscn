@@ -1,0 +1,283 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/casino-stage.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/game-logo.png" id="3_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/coin.png" id="4_coin"]
+[ext_resource type="Texture2D" path="res://assets/ui/shop-close-button.png" id="5_button"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
+bg_color = Color(0.075, 0.018, 0.04, 0.94)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.75, 0.22, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 34.0
+content_margin_top = 28.0
+content_margin_right = 34.0
+content_margin_bottom = 28.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button"]
+texture = ExtResource("5_button")
+texture_margin_left = 36.0
+texture_margin_top = 20.0
+texture_margin_right = 36.0
+texture_margin_bottom = 20.0
+content_margin_left = 24.0
+content_margin_top = 7.0
+content_margin_right = 24.0
+content_margin_bottom = 7.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_help"]
+bg_color = Color(0.16, 0.045, 0.045, 0.94)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.82, 0.24, 0.96)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+
+[node name="MainMenu" type="CanvasLayer"]
+layer = 30
+script = ExtResource("1_menu")
+
+[node name="Background" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.025, 0.008, 0.014, 0.58)
+
+[node name="Stage" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Glow" type="ColorRect" parent="Stage"]
+anchor_right = 0.68
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.48, 0.05, 0.03, 0.16)
+
+[node name="Logo" type="TextureRect" parent="Stage"]
+offset_left = 58.0
+offset_top = 130.0
+offset_right = 718.0
+offset_bottom = 438.0
+mouse_filter = 2
+texture = ExtResource("3_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin1" type="TextureRect" parent="Stage"]
+offset_left = 110.0
+offset_top = 500.0
+offset_right = 144.0
+offset_bottom = 534.0
+rotation = 0.0
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin2" type="TextureRect" parent="Stage"]
+offset_left = 168.0
+offset_top = 520.0
+offset_right = 210.0
+offset_bottom = 562.0
+rotation = 0.25
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin3" type="TextureRect" parent="Stage"]
+offset_left = 226.0
+offset_top = 522.0
+offset_right = 276.0
+offset_bottom = 572.0
+rotation = 0.5
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin4" type="TextureRect" parent="Stage"]
+offset_left = 284.0
+offset_top = 503.0
+offset_right = 318.0
+offset_bottom = 537.0
+rotation = 0.75
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin5" type="TextureRect" parent="Stage"]
+offset_left = 342.0
+offset_top = 482.0
+offset_right = 384.0
+offset_bottom = 524.0
+rotation = 1.0
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin6" type="TextureRect" parent="Stage"]
+offset_left = 400.0
+offset_top = 477.0
+offset_right = 450.0
+offset_bottom = 527.0
+rotation = 1.25
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin7" type="TextureRect" parent="Stage"]
+offset_left = 458.0
+offset_top = 493.0
+offset_right = 492.0
+offset_bottom = 527.0
+rotation = 1.5
+modulate = Color(1, 0.88, 0.42, 0.78)
+mouse_filter = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MenuPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(410, 500)
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -486.0
+offset_top = -250.0
+offset_right = -64.0
+offset_bottom = 250.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="MenuVBox" type="VBoxContainer" parent="MenuPanel"]
+layout_mode = 2
+theme_override_constants/separation = 13
+alignment = 1
+
+[node name="NewGameButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 64)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.88, 1)
+theme_override_colors/font_shadow_color = Color(0.18, 0.035, 0.018, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 27
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_button")
+text = "New Game"
+
+[node name="ContinueButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.78, 1)
+theme_override_colors/font_disabled_color = Color(0.68, 0.62, 0.56, 1)
+theme_override_colors/font_shadow_color = Color(0.18, 0.035, 0.018, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_button")
+text = "Continue"
+
+[node name="StatsButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+text = "Stats"
+
+[node name="HistoryButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+text = "Run History"
+
+[node name="OptionsButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+text = "Options"
+
+[node name="ExitButton" type="Button" parent="MenuPanel/MenuVBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxTexture_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button")
+text = "Exit"
+
+[node name="TutorialButton" type="Button" parent="."]
+custom_minimum_size = Vector2(42, 42)
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -62.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(1, 0.92, 0.54, 1)
+theme_override_colors/font_shadow_color = Color(0.12, 0.02, 0.01, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = SubResource("StyleBoxFlat_help")
+theme_override_styles/hover = SubResource("StyleBoxFlat_help")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_help")
+text = "?"

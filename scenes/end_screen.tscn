@@ -1,62 +1,326 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dmt6uvk4utk12"]
 
-[ext_resource type="Script" path="res://scripts/end_screen.gd" id="1_end"]
+[ext_resource type="Script" uid="uid://bs5srblx0548x" path="res://scripts/end_screen.gd" id="1_end"]
+[ext_resource type="Texture2D" uid="uid://bscxax0gad8yi" path="res://assets/backgrounds/end-game-jackpot-stage.png" id="2_background"]
+[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="3_skill_icons"]
+[ext_resource type="AudioStream" uid="uid://cipe81rdxki3f" path="res://assets/sounds/jackpot.wav" id="4_jackpot_sound"]
 
-[node name="EndScreen" type="CanvasLayer"]
+[node name="EndScreen" type="CanvasLayer" unique_id=715332776]
 layer = 20
 script = ExtResource("1_end")
+skill_icon_atlas = ExtResource("3_skill_icons")
 
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
+[node name="BackgroundDim" type="ColorRect" parent="." unique_id=2032699608]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.05, 0.05, 0.15, 0.95)
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
+[node name="BackgroundArt" type="TextureRect" parent="." unique_id=1751833897]
+modulate = Color(0.92, 0.82, 0.72, 0.52)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="EndPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(400, 350)
-layout_mode = 0
+[node name="JackpotSound" type="AudioStreamPlayer" parent="." unique_id=1906503324]
+stream = ExtResource("4_jackpot_sound")
+volume_db = -6.0
 
-[node name="EndVBox" type="VBoxContainer" parent="CenterContainer/EndPanel"]
-layout_mode = 1
+[node name="EndLayout" type="CenterContainer" parent="." unique_id=954471452]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="EndLayout" unique_id=1267197878]
+custom_minimum_size = Vector2(1040, 620)
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="EndLayout/Panel" unique_id=805539936]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="EndLayout/Panel/Content" unique_id=1394418176]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_colors/font_shadow_color = Color(0.18, 0.02, 0.01, 0.95)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 34
+text = "RUN COMPLETE"
+horizontal_alignment = 1
+
+[node name="FinalScoreLabel" type="Label" parent="EndLayout/Panel/Content" unique_id=1141106258]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.18, 0.02, 0.01, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 52
+text = "0 coins"
+horizontal_alignment = 1
+
+[node name="MetricRow" type="HBoxContainer" parent="EndLayout/Panel/Content" unique_id=1445361266]
+layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/EndPanel/EndVBox"]
-text = "JACKPOT!"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 48
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+[node name="SpinsCard" type="PanelContainer" parent="EndLayout/Panel/Content/MetricRow" unique_id=47529359]
+custom_minimum_size = Vector2(178, 82)
+layout_mode = 2
 
-[node name="FinalCoinsLabel" type="Label" parent="CenterContainer/EndPanel/EndVBox"]
-text = "Final Score: 0 coins"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/MetricRow/SpinsCard" unique_id=96311876]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
 
-[node name="StatsLabel" type="Label" parent="CenterContainer/EndPanel/EndVBox"]
-text = "Spins: 0 | Cycles: 0 | Skills: 0 unique"
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/MetricRow/SpinsCard/VBox" unique_id=205092913]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.52, 1)
+theme_override_font_sizes/font_size = 23
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 
-[node name="RatingLabel" type="Label" parent="CenterContainer/EndPanel/EndVBox"]
-text = "⭐⭐⭐⭐⭐"
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/MetricRow/SpinsCard/VBox" unique_id=192930008]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+text = "Spins"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
 
-[node name="RestartButton" type="Button" parent="CenterContainer/EndPanel/EndVBox"]
-custom_minimum_size = Vector2(0, 100)
+[node name="SkillsCard" type="PanelContainer" parent="EndLayout/Panel/Content/MetricRow" unique_id=1797899554]
+custom_minimum_size = Vector2(178, 82)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/MetricRow/SkillsCard" unique_id=1411273228]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/MetricRow/SkillsCard/VBox" unique_id=1167874338]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.52, 1)
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/MetricRow/SkillsCard/VBox" unique_id=721918378]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+text = "Skills"
+horizontal_alignment = 1
+
+[node name="EarnedCard" type="PanelContainer" parent="EndLayout/Panel/Content/MetricRow" unique_id=218623391]
+custom_minimum_size = Vector2(178, 82)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/MetricRow/EarnedCard" unique_id=510663323]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/MetricRow/EarnedCard/VBox" unique_id=1670816535]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.52, 1)
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/MetricRow/EarnedCard/VBox" unique_id=905592543]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+text = "Earned"
+horizontal_alignment = 1
+
+[node name="SpentCard" type="PanelContainer" parent="EndLayout/Panel/Content/MetricRow" unique_id=297798531]
+custom_minimum_size = Vector2(178, 82)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/MetricRow/SpentCard" unique_id=1135675328]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/MetricRow/SpentCard/VBox" unique_id=50122709]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.52, 1)
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/MetricRow/SpentCard/VBox" unique_id=783438851]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+text = "Spent"
+horizontal_alignment = 1
+
+[node name="TimeCard" type="PanelContainer" parent="EndLayout/Panel/Content/MetricRow" unique_id=1612816544]
+custom_minimum_size = Vector2(178, 82)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/MetricRow/TimeCard" unique_id=100489397]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/MetricRow/TimeCard/VBox" unique_id=1081172323]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.52, 1)
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/MetricRow/TimeCard/VBox" unique_id=1857459055]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+text = "Time"
+horizontal_alignment = 1
+
+[node name="BodyRow" type="HBoxContainer" parent="EndLayout/Panel/Content" unique_id=650311938]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="OutcomePanel" type="PanelContainer" parent="EndLayout/Panel/Content/BodyRow" unique_id=1533183849]
+custom_minimum_size = Vector2(320, 292)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel" unique_id=1665310472]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox" unique_id=2052310563]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Outcome Hits"
+
+[node name="OutcomeRows" type="VBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox" unique_id=367611702]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GreenRow" type="HBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows" unique_id=1617486304]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GreenRow" unique_id=2072383885]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Plus"
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GreenRow" unique_id=1179516912]
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="RedRow" type="HBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows" unique_id=1738653020]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/RedRow" unique_id=1014793792]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Minus"
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/RedRow" unique_id=644297061]
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="GoldRow" type="HBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows" unique_id=555100430]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GoldRow" unique_id=292823987]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Multiply"
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GoldRow" unique_id=679977550]
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="GreyRow" type="HBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows" unique_id=283325976]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GreyRow" unique_id=192774553]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "None"
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/GreyRow" unique_id=258859241]
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="JackpotRow" type="HBoxContainer" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows" unique_id=508924302]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/JackpotRow" unique_id=253482891]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Jackpot"
+
+[node name="Value" type="Label" parent="EndLayout/Panel/Content/BodyRow/OutcomePanel/VBox/OutcomeRows/JackpotRow" unique_id=1181047311]
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="BuildPanel" type="PanelContainer" parent="EndLayout/Panel/Content/BodyRow" unique_id=1788012711]
+custom_minimum_size = Vector2(660, 292)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="EndLayout/Panel/Content/BodyRow/BuildPanel" unique_id=129653466]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="EndLayout/Panel/Content/BodyRow/BuildPanel/VBox" unique_id=382013143]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 22
+text = "Run Build"
+
+[node name="EmptyBuildLabel" type="Label" parent="EndLayout/Panel/Content/BodyRow/BuildPanel/VBox" unique_id=1391817871]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.84, 0.7, 1)
+theme_override_font_sizes/font_size = 22
+text = "No skills bought this run"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuildScroll" type="ScrollContainer" parent="EndLayout/Panel/Content/BodyRow/BuildPanel/VBox" unique_id=428225735]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SkillGrid" type="GridContainer" parent="EndLayout/Panel/Content/BodyRow/BuildPanel/VBox/BuildScroll" unique_id=1159485362]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 8
+
+[node name="ActionRow" type="HBoxContainer" parent="EndLayout/Panel/Content" unique_id=469607329]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="PlayAgainButton" type="Button" parent="EndLayout/Panel/Content/ActionRow" unique_id=373437602]
+custom_minimum_size = Vector2(240, 58)
+layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Play Again"
 
-[node name="JackpotSound" type="AudioStreamPlayer" parent="."]
-volume_db = -6.0
+[node name="MainMenuButton" type="Button" parent="EndLayout/Panel/Content/ActionRow" unique_id=281063409]
+custom_minimum_size = Vector2(210, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Main Menu"

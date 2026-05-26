@@ -1,31 +1,44 @@
 # scripts/shop.gd
 extends CanvasLayer
 
-const SkillManager = preload("res://scripts/skill_manager.gd")
-const SKILL_ICON_ATLAS = preload("res://assets/ui/shop-skill-icons.png")
+signal purchase_completed(cost)
 
-@onready var skills_container: GridContainer = $CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox
+const SkillManager = preload("res://scripts/skill_manager.gd")
+const SkillEffects = preload("res://scripts/skill_effects.gd")
+const UiFormat = preload("res://scripts/ui_format.gd")
+
+@export var shop_panel_texture: Texture2D
+@export var shop_close_button_texture: Texture2D
+@export var skill_icon_atlas: Texture2D
+
+@onready var shop_panel: PanelContainer = $CenterContainer/ShopPanel
 @onready var coins_label: Label = $CenterContainer/ShopPanel/ShopVBox/CoinsLabel
 @onready var continue_button: Button = $CenterContainer/ShopPanel/ShopVBox/ContinueButton
-
-var refresh_queued := false
-
-const SKILL_ICON_ORDER = [
-	"lucky_charm",
-	"quick_spin",
-	"iron_skin",
-	"coin_magnet",
-	"sharp_mind",
-	"double_down",
-	"risk_taker",
-	"fortunes_favor",
-	"banker",
-	"second_wind",
+@onready var continue_button_art: TextureRect = $CenterContainer/ShopPanel/ShopVBox/ContinueButton/ButtonArt
+@onready var continue_button_label: Label = $CenterContainer/ShopPanel/ShopVBox/ContinueButton/ButtonLabel
+@onready var close_sound: AudioStreamPlayer = $CloseSound
+@onready var skill_cards: Array[PanelContainer] = [
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1 as PanelContainer,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2 as PanelContainer,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3 as PanelContainer,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4 as PanelContainer,
 ]
 
+var refresh_queued := false
+var offered_skills: Array[Dictionary] = []
+var bought_skill_ids: Array[String] = []
+
 func _ready():
+	_style_shop_panel()
+	_style_continue_button()
+	_connect_skill_card_buttons()
+	continue_button.mouse_entered.connect(_update_continue_button_state)
+	continue_button.mouse_exited.connect(_update_continue_button_state)
+	continue_button.button_down.connect(_update_continue_button_state)
+	continue_button.button_up.connect(_update_continue_button_state)
 	continue_button.pressed.connect(_on_close)
 	Game.coins_changed.connect(_on_coins_changed, CONNECT_DEFERRED)
+	offered_skills = Game.get_pending_shop_skills()
 	_on_coins_changed(Game.coins)
 
 func _request_populate_skills():
@@ -36,87 +49,138 @@ func _request_populate_skills():
 
 func _populate_skills():
 	refresh_queued = false
-	for child in skills_container.get_children():
-		child.queue_free()
 
-	for skill in SkillManager.get_all_skills():
+	for index in range(skill_cards.size()):
+		var card = skill_cards[index]
+		if index >= offered_skills.size():
+			_hide_card(card)
+			continue
+
+		var skill = offered_skills[index]
+		var bought = skill["id"] in bought_skill_ids
 		var level = Game.skill_levels.get(skill["id"], 0)
-		var owned = skill["id"] in Game.unique_skills
+		if bought and skill["max"] != 0:
+			level -= 1
+		var cost_level = Game.unique_skills.size() if skill["max"] == 0 else level
+		var cost = _get_discounted_cost(skill, cost_level)
+		var can_afford = Game.coins >= cost and not bought
 
-		if owned:
-			continue
-		if skill["max"] > 0 and level >= skill["max"]:
-			continue
+		_configure_card(card, skill, level, cost, can_afford, bought)
 
-		var cost = SkillManager.get_purchase_cost(skill, level)
-		var can_afford = Game.coins >= cost
+func _connect_skill_card_buttons() -> void:
+	for card in skill_cards:
+		var buy_button = card.get_node("Content/BuyButton") as Button
+		buy_button.pressed.connect(_on_card_buy_pressed.bind(card))
 
-		var card = PanelContainer.new()
-		card.custom_minimum_size = Vector2(250, 250)
-		card.tooltip_text = skill["desc"]
+func _hide_card(card: PanelContainer) -> void:
+	card.visible = false
+	if card.has_meta("skill"):
+		card.remove_meta("skill")
 
-		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 8)
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		card.add_child(vbox)
+func _configure_card(card: PanelContainer, skill: Dictionary, level: int, cost: int, can_afford: bool, bought: bool) -> void:
+	card.visible = true
+	card.set_meta("skill", skill)
 
-		var icon = TextureRect.new()
-		icon.custom_minimum_size = Vector2(108, 108)
-		icon.texture = _make_skill_icon(skill["id"])
-		icon.expand_mode = 1
-		icon.stretch_mode = 5
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(icon)
+	var icon = card.get_node("Content/Icon") as TextureRect
+	var name_label = card.get_node("Content/NameLabel") as Label
+	var description_label = card.get_node("Content/DescriptionLabel") as Label
+	var buy_button = card.get_node("Content/BuyButton") as Button
+	var buy_content = card.get_node("Content/BuyButton/BuyContent") as HBoxContainer
+	var buy_text_label = card.get_node("Content/BuyButton/BuyContent/BuyText") as Label
+	var bought_overlay = card.get_node("BoughtOverlay") as TextureRect
 
-		var name = Label.new()
-		name.text = skill["name"]
-		if level > 0:
-			name.text += " Lv." + str(level)
-		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name.add_theme_color_override("font_color", Color(1.0, 0.92, 0.65, 1))
-		name.add_theme_font_size_override("font_size", 18)
-		name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(name)
+	icon.texture = _get_skill_icon(skill["id"])
+	name_label.text = str(skill["name"])
+	description_label.text = _get_purchase_effect_text(skill, level)
+	bought_overlay.visible = bought
 
-		var buy_btn = Button.new()
-		buy_btn.text = "BUY " + str(cost)
-		buy_btn.disabled = not can_afford
-		buy_btn.custom_minimum_size = Vector2(180, 64)
-		buy_btn.add_theme_font_size_override("font_size", 20)
-		buy_btn.pressed.connect(_on_buy.bind(skill))
-		vbox.add_child(buy_btn)
+	buy_button.text = ""
+	buy_button.disabled = not can_afford
+	buy_content.visible = not bought
+	buy_text_label.text = UiFormat.compact_number(cost)
 
-		skills_container.add_child(card)
+func _on_card_buy_pressed(card: PanelContainer) -> void:
+	if not card.has_meta("skill"):
+		return
+	_on_buy(card.get_meta("skill") as Dictionary)
 
 func _on_buy(skill: Dictionary):
+	if skill["id"] in bought_skill_ids:
+		return
 	var level = Game.skill_levels.get(skill["id"], 0)
-	var cost = SkillManager.get_purchase_cost(skill, level)
-	Game.buy_skill(skill["id"], cost)
+	var cost_level = Game.unique_skills.size() if skill["max"] == 0 else level
+	var cost = _get_discounted_cost(skill, cost_level)
+	if Game.buy_skill(skill["id"], cost):
+		bought_skill_ids.append(skill["id"])
+		purchase_completed.emit(cost)
+		_request_populate_skills()
+
+func _get_discounted_cost(skill: Dictionary, level: int) -> int:
+	var base_cost = SkillManager.get_purchase_cost(skill, level)
+	var savvy_level = Game.skill_levels.get("shop_savvy", 0)
+	return max(1, int(round(float(base_cost) * max(0.0, 1.0 - SkillEffects.SHOP_SAVVY_PRICE_DISCOUNT_PER_LEVEL * savvy_level))))
+
+func _get_purchase_effect_text(skill: Dictionary, current_level: int) -> String:
+	return SkillManager.get_effect_text(skill["id"], current_level)
+
+func _get_skill_icon(skill_id: String) -> Texture2D:
+	return UiFormat.skill_icon(skill_id, skill_icon_atlas)
+
+func _style_shop_panel() -> void:
+	var style = StyleBoxTexture.new()
+	style.texture = shop_panel_texture
+	style.texture_margin_left = 88
+	style.texture_margin_top = 78
+	style.texture_margin_right = 88
+	style.texture_margin_bottom = 70
+	style.content_margin_left = 58
+	style.content_margin_top = 34
+	style.content_margin_right = 58
+	style.content_margin_bottom = 84
+	shop_panel.add_theme_stylebox_override("panel", style)
+
+func _style_continue_button() -> void:
+	continue_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	continue_button.custom_minimum_size = Vector2(360, 88)
+	continue_button.flat = true
+	continue_button.text = ""
+	continue_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	continue_button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
+	continue_button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
+	continue_button.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
+
+	continue_button_art.texture = shop_close_button_texture
+	_update_continue_button_state()
+
+func _update_continue_button_state() -> void:
+	if continue_button_art == null or continue_button_label == null:
+		return
+	var pressed = continue_button.button_pressed or continue_button.has_focus() and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var hovered = continue_button.get_global_rect().has_point(continue_button.get_global_mouse_position())
+	if continue_button.disabled:
+		continue_button_art.modulate = Color(0.45, 0.45, 0.45, 0.82)
+		continue_button_label.modulate = Color(0.72, 0.68, 0.64, 1)
+		continue_button_label.position = Vector2.ZERO
+	elif pressed:
+		continue_button_art.modulate = Color(0.78, 0.72, 0.68, 1)
+		continue_button_label.modulate = Color(0.82, 0.76, 0.62, 1)
+		continue_button_label.position = Vector2(0, 2)
+	elif hovered:
+		continue_button_art.modulate = Color(1.12, 1.08, 1.0, 1)
+		continue_button_label.modulate = Color(1.0, 1.0, 0.9, 1)
+		continue_button_label.position = Vector2.ZERO
+	else:
+		continue_button_art.modulate = Color.WHITE
+		continue_button_label.modulate = Color.WHITE
+		continue_button_label.position = Vector2.ZERO
 
 func _on_coins_changed(total: int):
-	coins_label.text = "Coins: " + str(total)
+	coins_label.text = "Coins: " + UiFormat.compact_number(total)
 	_request_populate_skills()
 
 func _on_close():
+	continue_button.disabled = true
+	_update_continue_button_state()
+	close_sound.play()
+	await close_sound.finished
 	queue_free()
-
-func _make_skill_icon(skill_id: String) -> AtlasTexture:
-	var index = SKILL_ICON_ORDER.find(skill_id)
-	if index < 0:
-		index = 0
-	var columns = 5
-	var rows = 2
-	var cell_size = Vector2(
-		float(SKILL_ICON_ATLAS.get_width()) / float(columns),
-		float(SKILL_ICON_ATLAS.get_height()) / float(rows)
-	)
-	var atlas = AtlasTexture.new()
-	atlas.atlas = SKILL_ICON_ATLAS
-	atlas.region = Rect2(
-		float(index % columns) * cell_size.x,
-		float(index / columns) * cell_size.y,
-		cell_size.x,
-		cell_size.y
-	)
-	return atlas

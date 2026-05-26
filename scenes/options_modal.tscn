@@ -1,0 +1,144 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/options_modal.gd" id="1_options"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.07, 0.02, 0.045, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.74, 0.18, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
+
+[node name="OptionsModal" type="CanvasLayer"]
+layer = 40
+script = ExtResource("1_options")
+
+[node name="Shade" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.52)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(560, 640)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 32
+text = "Options"
+horizontal_alignment = 1
+
+[node name="WindowModeLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+text = "Window Mode"
+
+[node name="WindowModeSelector" type="OptionButton" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(320, 42)
+layout_mode = 2
+
+[node name="ResolutionLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+text = "Resolution"
+
+[node name="ResolutionSelector" type="OptionButton" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(320, 42)
+layout_mode = 2
+
+[node name="ResolutionWarningLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.76, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "This resolution may feel cramped. Use larger UI only if it remains readable."
+autowrap_mode = 2
+
+[node name="MusicVolumeLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+text = "Music Volume"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(340, 36)
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.65
+
+[node name="MusicMutedLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.76, 0.24, 1)
+theme_override_font_sizes/font_size = 14
+text = "Music is muted. Raise this slider to hear the background music."
+autowrap_mode = 2
+
+[node name="SfxVolumeLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+text = "Sound Effects Volume"
+
+[node name="SfxVolumeSlider" type="HSlider" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(340, 36)
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="AccessibilityLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.24, 1)
+theme_override_font_sizes/font_size = 20
+text = "Accessibility"
+
+[node name="ReducedMotionCheck" type="CheckBox" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+text = "Reduced motion"
+
+[node name="MutedFlashesCheck" type="CheckBox" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+text = "Muted flashes"
+
+[node name="LargeUiTextCheck" type="CheckBox" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+text = "Larger UI text"
+
+[node name="SaveExitButton" type="Button" parent="CenterContainer/Panel/VBox"]
+visible = false
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "Save & Exit"
+
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(340, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "Back"

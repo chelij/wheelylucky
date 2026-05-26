@@ -1,342 +1,398 @@
-[gd_scene load_steps=8 format=3 uid="uid://cfl7tvhu6wbum"]
+[gd_scene format=3 uid="uid://cfl7tvhu6wbum"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://brylj4ro2d824" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://77roqdija0nn" path="res://scripts/wheel.gd" id="1_wheel"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/casino-stage.png" id="3_background"]
-[ext_resource type="Texture2D" path="res://assets/pointer/pointer.png" id="4_pointer"]
-[ext_resource type="Texture2D" path="res://assets/ui/coin-badge.png" id="5_coin_badge"]
-[ext_resource type="Texture2D" path="res://assets/ui/upgrades-panel.png" id="6_upgrades_panel"]
-[ext_resource type="Texture2D" path="res://assets/ui/button-plate.png" id="7_button_plate"]
+[ext_resource type="PackedScene" uid="uid://dmt6uvk4utk12" path="res://scenes/end_screen.tscn" id="2_end"]
+[ext_resource type="PackedScene" path="res://scenes/main_menu.tscn" id="2_main_menu"]
+[ext_resource type="PackedScene" path="res://scenes/options_modal.tscn" id="2_options"]
+[ext_resource type="PackedScene" uid="uid://codceu42lqc02" path="res://scenes/shop.tscn" id="2_shop"]
+[ext_resource type="PackedScene" path="res://scenes/tutorial_modal.tscn" id="2_tutorial"]
+[ext_resource type="Texture2D" uid="uid://dipm3rko36dlv" path="res://assets/backgrounds/casino-stage.png" id="3_background"]
+[ext_resource type="Texture2D" uid="uid://c1kypr17tt2dy" path="res://assets/pointer/pointer.png" id="4_pointer"]
+[ext_resource type="Texture2D" uid="uid://cs6cjstiq1uca" path="res://assets/pointer/slot-indicator.png" id="5_slot_indicator"]
+[ext_resource type="Texture2D" uid="uid://b0q0s3lmf17ej" path="res://assets/ui/shop-button.png" id="6_shop_button"]
+[ext_resource type="Texture2D" uid="uid://dxj0ujyncvexm" path="res://assets/ui/side-panel.png" id="7_upgrades_panel"]
+[ext_resource type="Texture2D" uid="uid://b8hlmw6te0uem" path="res://assets/ui/coin-badge.png" id="8_coin_badge"]
+[ext_resource type="Texture2D" uid="uid://d1s5nj7tn062x" path="res://assets/ui/game-logo.png" id="9_game_logo"]
+[ext_resource type="Texture2D" uid="uid://dvxrfxhj6nld4" path="res://assets/ui/shop-close-button.png" id="10_menu_button"]
+[ext_resource type="Texture2D" uid="uid://bilhj2dhg48at" path="res://assets/ui/coin.png" id="11_coin"]
+[ext_resource type="Texture2D" uid="uid://bvjx277tacrt" path="res://assets/ui/prev-wheel.png" id="12_prev_wheel"]
+[ext_resource type="Texture2D" uid="uid://c4dhqtgk0mkjx" path="res://assets/ui/next-wheel.png" id="13_next_wheel"]
+[ext_resource type="Texture2D" uid="uid://b0f0754ghw6vc" path="res://assets/ui/wheel-center-medallion.png" id="14_center_medallion"]
+[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="15_skill_icons"]
+[ext_resource type="AudioStream" uid="uid://dww3j5lunbjor" path="res://assets/sounds/result-positive.wav" id="16_result_positive"]
+[ext_resource type="AudioStream" uid="uid://dhnubbnoh2hhu" path="res://assets/sounds/result-negative.wav" id="17_result_negative"]
+[ext_resource type="AudioStream" uid="uid://cuprwswjcuyh4" path="res://assets/sounds/multiplier.wav" id="18_multiplier"]
+[ext_resource type="AudioStream" uid="uid://bsmxgkuqr6wsn" path="res://assets/sounds/w10-loss.wav" id="19_w10_loss"]
+[ext_resource type="AudioStream" uid="uid://5o2gei5qmsa8" path="res://assets/sounds/shop-open.wav" id="20_shop_open"]
+[ext_resource type="AudioStream" uid="uid://d3cj5lp4ml4uu" path="res://assets/sounds/spin.wav" id="21_spin"]
+[ext_resource type="AudioStream" uid="uid://f6k7prq1flq" path="res://assets/sounds/background-music.wav" id="22_background_music"]
+[ext_resource type="AudioStream" uid="uid://bbin0txlqfqhj" path="res://assets/sounds/button-hover.wav" id="23_button_hover"]
+[ext_resource type="AudioStream" uid="uid://q2wxcrmrvole" path="res://assets/sounds/button-press.wav" id="24_button_press"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=563059814]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_main")
+shop_scene = ExtResource("2_shop")
+end_screen_scene = ExtResource("2_end")
+menu_background_texture = ExtResource("3_background")
+game_logo_texture = ExtResource("9_game_logo")
+menu_button_texture = ExtResource("10_menu_button")
+coin_texture = ExtResource("11_coin")
+skill_icon_atlas = ExtResource("15_skill_icons")
+button_hover_stream = ExtResource("23_button_hover")
+button_press_stream = ExtResource("24_button_press")
+options_modal_scene = ExtResource("2_options")
+tutorial_modal_scene = ExtResource("2_tutorial")
+main_menu_scene = ExtResource("2_main_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=621724174]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.08, 0.08, 0.15, 1)
 
-[node name="BackgroundArt" type="TextureRect" parent="."]
+[node name="BackgroundArt" type="TextureRect" parent="." unique_id=966653880]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("3_background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="CoinBadge" type="TextureRect" parent="."]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -248.0
-offset_top = 8.0
-offset_right = -22.0
-offset_bottom = 64.0
-mouse_filter = 2
-texture = ExtResource("5_coin_badge")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="TopBar" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 0.0
-offset_top = 10.0
-offset_right = -22.0
-offset_bottom = 64.0
-theme_override_constants/separation = 10
-
-[node name="TitleLabel" type="Label" parent="TopBar"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "Wheely Lucky"
-
-[node name="Spacer" type="Control" parent="TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TopCoinsDisplay" type="Label" parent="TopBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(190, 44)
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="WheelSelector" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 0.0
-offset_top = 24.0
-offset_right = -220.0
-offset_bottom = 104.0
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="WheelSelectorHBox" type="HBoxContainer" parent="WheelSelector"]
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_constants/separation = 8
-
-[node name="Wheel" type="Control" parent="."]
+[node name="Wheel" type="Control" parent="." unique_id=1548214411]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 440.0
-offset_top = 80.0
+offset_top = 86.0
 offset_right = 840.0
-offset_bottom = 640.0
+offset_bottom = 646.0
 script = ExtResource("1_wheel")
-update_mode = 2
+center_medallion_texture = ExtResource("14_center_medallion")
 
-[node name="PointerArrow" type="TextureRect" parent="Wheel"]
-layout_mode = 0
-offset_left = 330.0
-offset_top = 230.0
-offset_right = 424.0
-offset_bottom = 330.0
-mouse_filter = 2
-texture = ExtResource("4_pointer")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="CycleLabel" type="Label" parent="Wheel"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 150.0
-offset_top = 20.0
-offset_right = 250.0
-offset_bottom = 42.0
-theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
-theme_override_font_sizes/font_size = 14
-text = "Cycle 1"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="WheelNumber" type="Label" parent="Wheel"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 135.0
-offset_top = 46.0
-offset_right = 265.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
-theme_override_font_sizes/font_size = 16
-text = "Wheel 1 / 10"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="CoinsDisplay" type="Label" parent="Wheel"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 155.0
-offset_top = 76.0
-offset_right = 245.0
-offset_bottom = 104.0
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
-theme_override_font_sizes/font_size = 20
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="CostDisplay" type="Label" parent="Wheel"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 150.0
-offset_top = 440.0
-offset_right = 250.0
-offset_bottom = 464.0
-theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
-theme_override_font_sizes/font_size = 14
-text = "FREE"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="SpinButton" type="Button" parent="Wheel"]
-visible = false
-layout_mode = 1
-anchors_preset = 0
-offset_left = 130.0
-offset_top = 456.0
-offset_right = 270.0
-offset_bottom = 536.0
-text = "SPIN"
-
-[node name="ShopButtonArt" type="TextureRect" parent="Wheel"]
-visible = false
-layout_mode = 0
-offset_left = 96.0
-offset_top = 454.0
-offset_right = 304.0
-offset_bottom = 530.0
-mouse_filter = 2
-texture = ExtResource("7_button_plate")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ShopButton" type="Button" parent="Wheel"]
-visible = false
-layout_mode = 1
-anchors_preset = 0
-offset_left = 104.0
-offset_top = 460.0
-offset_right = 296.0
-offset_bottom = 524.0
-theme_override_font_sizes/font_size = 24
-flat = true
-text = "SHOP"
-
-[node name="SpinSound" type="AudioStreamPlayer" parent="Wheel"]
-volume_db = -8.0
-
-[node name="ProbabilityPanel" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 24.0
-offset_top = -150.0
-offset_right = 300.0
-offset_bottom = 170.0
-theme_override_constants/separation = 8
-
-[node name="ProbabilityBackground" type="TextureRect" parent="ProbabilityPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-texture = ExtResource("6_upgrades_panel")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ProbabilityVBox" type="VBoxContainer" parent="ProbabilityPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = -18.0
-offset_bottom = -18.0
-theme_override_constants/separation = 6
-
-[node name="ProbabilityTitle" type="Label" parent="ProbabilityPanel/ProbabilityVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
-theme_override_font_sizes/font_size = 16
-text = "PROBABILITY"
-horizontal_alignment = 1
-
-[node name="ProbabilityRows" type="VBoxContainer" parent="ProbabilityPanel/ProbabilityVBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="StatsPanel" type="VBoxContainer" parent="."]
+[node name="PointerArrow" type="TextureRect" parent="Wheel" unique_id=843815254]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -360.0
-offset_top = -170.0
-offset_right = -24.0
-offset_bottom = 190.0
-theme_override_constants/separation = 8
-
-[node name="StatsBackground" type="TextureRect" parent="StatsPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+offset_left = -19.0
+offset_top = -60.0
+offset_right = 101.0
+offset_bottom = 60.0
+grow_horizontal = 0
+grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("6_upgrades_panel")
+texture = ExtResource("4_pointer")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StatsVBox" type="VBoxContainer" parent="StatsPanel"]
+[node name="PointerIndicator" type="TextureRect" parent="Wheel/PointerArrow" unique_id=1502814751]
+layout_mode = 1
+offset_left = 78.0
+offset_top = 44.0
+offset_right = 110.0
+offset_bottom = 76.0
+mouse_filter = 2
+texture = ExtResource("5_slot_indicator")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CycleLabel" type="Label" parent="Wheel" unique_id=1717601119]
+visible = false
+layout_mode = 1
+offset_left = 150.0
+offset_top = 20.0
+offset_right = 250.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "Cycle 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WheelNumber" type="Label" parent="Wheel" unique_id=218708686]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 238.0
+offset_right = 270.0
+offset_bottom = 264.0
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 20
+text = "◎ 1 / 10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoinBadge" type="TextureRect" parent="Wheel" unique_id=985752592]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -165.0
+offset_top = 260.0
+offset_right = 135.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_coin_badge")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CoinsDisplay" type="Label" parent="Wheel" unique_id=1150210975]
+layout_mode = 1
+offset_left = 125.0
+offset_top = 564.0
+offset_right = 283.0
+offset_bottom = 608.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CostDisplay" type="Label" parent="Wheel" unique_id=1713455832]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 294.0
+offset_right = 270.0
+offset_bottom = 320.0
+theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "◆ FREE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShopButton" type="Button" parent="Wheel" unique_id=1519240650]
+visible = false
+layout_mode = 1
+offset_left = 160.0
+offset_top = 322.0
+offset_right = 240.0
+offset_bottom = 402.0
+icon = ExtResource("6_shop_button")
+expand_icon = true
+
+[node name="PrevWheelButton" type="Button" parent="Wheel" unique_id=1471502633]
+layout_mode = 1
+offset_left = 74.0
+offset_top = 236.0
+offset_right = 162.0
+offset_bottom = 324.0
+theme_override_font_sizes/font_size = 36
+icon = ExtResource("12_prev_wheel")
+expand_icon = true
+
+[node name="NextWheelButton" type="Button" parent="Wheel" unique_id=1258496575]
+layout_mode = 1
+offset_left = 238.0
+offset_top = 236.0
+offset_right = 326.0
+offset_bottom = 324.0
+theme_override_font_sizes/font_size = 36
+icon = ExtResource("13_next_wheel")
+expand_icon = true
+
+[node name="SpinButton" type="Button" parent="Wheel" unique_id=1209888593]
+visible = false
+layout_mode = 1
+offset_left = 130.0
+offset_top = 456.0
+offset_right = 270.0
+offset_bottom = 536.0
+text = "SPIN"
+
+[node name="SpinSound" type="AudioStreamPlayer" parent="Wheel" unique_id=2020741718]
+stream = ExtResource("21_spin")
+volume_db = -8.0
+
+[node name="ProbabilityPanel" type="Control" parent="." unique_id=1560415487]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -180.0
+offset_right = 348.0
+offset_bottom = 180.0
+grow_vertical = 2
+
+[node name="ProbabilityBackdrop" type="TextureRect" parent="ProbabilityPanel" unique_id=1877918216]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = -18.0
-offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_upgrades_panel")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ProbabilityBackground" type="ColorRect" parent="ProbabilityPanel" unique_id=1949553223]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.12, 0.035, 0.07, 0.16)
+
+[node name="ProbabilityVBox" type="VBoxContainer" parent="ProbabilityPanel" unique_id=964486987]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.0
+offset_top = 50.0
+offset_right = -56.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="StatsTitle" type="Label" parent="StatsPanel/StatsVBox"]
-visible = false
+[node name="ProbabilityTitle" type="Label" parent="ProbabilityPanel/ProbabilityVBox" unique_id=1152538997]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
-theme_override_font_sizes/font_size = 16
-text = "STATS"
+theme_override_font_sizes/font_size = 20
+text = "PROBABILITY"
 horizontal_alignment = 1
 
-[node name="StatsSpins" type="Label" parent="StatsPanel/StatsVBox"]
-visible = false
+[node name="ProbabilityRows" type="VBoxContainer" parent="ProbabilityPanel/ProbabilityVBox" unique_id=750225363]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
-text = "Total Spins: 0"
-horizontal_alignment = 1
+theme_override_constants/separation = 5
 
-[node name="StatsCycles" type="Label" parent="StatsPanel/StatsVBox"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
-text = "Cycles: 1"
-horizontal_alignment = 1
+[node name="StatsPanel" type="Control" parent="." unique_id=6487880]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -348.0
+offset_top = -180.0
+offset_right = -28.0
+offset_bottom = 180.0
+grow_horizontal = 0
+grow_vertical = 2
 
-[node name="StatsSkills" type="Label" parent="StatsPanel/StatsVBox"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
-text = "Skills: 0"
-horizontal_alignment = 1
+[node name="StatsBackdrop" type="TextureRect" parent="StatsPanel" unique_id=742822001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_upgrades_panel")
+expand_mode = 1
+stretch_mode = 5
 
-autowrap_mode = 2
+[node name="StatsBackground" type="ColorRect" parent="StatsPanel" unique_id=113668549]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.12, 0.035, 0.07, 0.12)
 
-[node name="StatsBest" type="Label" parent="StatsPanel/StatsVBox"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0, 1)
-text = "Best Score: 0"
-horizontal_alignment = 1
+[node name="StatsVBox" type="VBoxContainer" parent="StatsPanel" unique_id=1805233930]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.0
+offset_top = 50.0
+offset_right = -56.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
 
-[node name="HSeparator" type="HSeparator" parent="StatsPanel/StatsVBox"]
-visible = false
-layout_mode = 2
-
-[node name="UpgradesTitle" type="Label" parent="StatsPanel/StatsVBox"]
+[node name="UpgradesTitle" type="Label" parent="StatsPanel/StatsVBox" unique_id=1270716987]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 text = "UPGRADES"
 horizontal_alignment = 1
 
-[node name="UpgradesVBox" type="VBoxContainer" parent="StatsPanel/StatsVBox"]
+[node name="UpgradesScroll" type="ScrollContainer" parent="StatsPanel/StatsVBox" unique_id=1914847400]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="UpgradesVBox" type="VBoxContainer" parent="StatsPanel/StatsVBox/UpgradesScroll" unique_id=164747888]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="ResultPositiveSound" type="AudioStreamPlayer" parent="."]
+[node name="ResultPositiveSound" type="AudioStreamPlayer" parent="." unique_id=752309539]
+stream = ExtResource("16_result_positive")
 volume_db = -7.0
 
-[node name="ResultNegativeSound" type="AudioStreamPlayer" parent="."]
+[node name="ResultNegativeSound" type="AudioStreamPlayer" parent="." unique_id=337754196]
+stream = ExtResource("17_result_negative")
 volume_db = -7.0
 
-[node name="ShopOpenSound" type="AudioStreamPlayer" parent="."]
+[node name="MultiplierSound" type="AudioStreamPlayer" parent="." unique_id=1105353083]
+stream = ExtResource("18_multiplier")
+volume_db = -7.0
+
+[node name="W10LossSound" type="AudioStreamPlayer" parent="." unique_id=341887326]
+stream = ExtResource("19_w10_loss")
+volume_db = -7.0
+
+[node name="ShopOpenSound" type="AudioStreamPlayer" parent="." unique_id=784447745]
+stream = ExtResource("20_shop_open")
 volume_db = -8.0
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=1475064582]
+stream = ExtResource("22_background_music")
+volume_db = -5.0
+
+[node name="InGameOptionsButton" type="Button" parent="." unique_id=983683834]
+visible = false
+custom_minimum_size = Vector2(120, 42)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -196.0
+offset_top = 20.0
+offset_right = -76.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(1, 0.94, 0.72, 1)
+text = "Options"
+
+[node name="InGameHelpButton" type="Button" parent="." unique_id=1693967427]
+visible = false
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -62.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(1, 0.92, 0.54, 1)
+theme_override_font_sizes/font_size = 25
+text = "?"

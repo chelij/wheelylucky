@@ -156,7 +156,7 @@ Cost formula for upgradeable skills: `purchase_cost = max(1, round(base_cost / 1
 - **Shop button:** Hidden until available; uses generated button plate art from `assets/ui/button-plate.png`; button hit area is 2x larger.
 - **Probability chart:** Left-side panel lists the current wheel sections and their modified probabilities, updating when wheel selection or skills change.
 - **Upgrades panel:** Stats are hidden; generated upgrades panel art at `assets/ui/upgrades-panel.png` sits middle-right in a larger frame. Purchased upgrades render as generated badge rows using `assets/ui/upgrade-badge.png` with centered text.
-- **Shop skills:** Shop uses rectangular skill cards with generated icons from `assets/ui/shop-skill-icons.png`, centered skill names, large buy buttons, and hover tooltips describing each skill.
+- **Shop skills:** Shop uses rectangular skill cards with generated icons from `assets/ui/skill-icons.png`, centered skill names, large buy buttons, and hover tooltips describing each skill.
 - **Top title:** Hidden in-game. Native window title still comes from project settings.
 - **Result feedback:** Floating numeric result appears near the wheel after spin.
 - **Debug controls:** `Q` instant spin, `W` add 100 coins.
@@ -173,7 +173,6 @@ wheelylucky/
 │   ├── main.tscn              # Main game scene (wheel + UI)
 │   ├── wheel.tscn             # Spinning wheel with draw logic
 │   ├── shop.tscn              # Shop overlay (CanvasLayer)
-│   ├── result_popup.tscn      # Result display popup
 │   └── end_screen.tscn        # Game over screen (jackpot only)
 ├── scripts/
 │   ├── game.gd                # Autoload: coins, wheel progress, spins, skills
@@ -181,7 +180,6 @@ wheelylucky/
 │   ├── wheel.gd               # Spin logic, animation, result calculation
 │   ├── skill_manager.gd       # Skill definitions, costs, effects
 │   ├── shop.gd                # Shop overlay, purchase logic
-│   ├── result_popup.gd        # Result popup animation
 │   ├── end_screen.gd          # End game screen
 │   └── save_manager.gd        # Save/load (best score)
 ├── assets/
@@ -192,7 +190,7 @@ wheelylucky/
 │   └── ui/
 │       ├── button-plate.png
 │       ├── coin-badge.png
-│       ├── shop-skill-icons.png
+│       ├── skill-icons.png
 │       ├── upgrade-badge.png
 │       └── upgrades-panel.png
 └── exports/
@@ -208,7 +206,7 @@ wheelylucky/
 | Upgrades panel | `assets/ui/upgrades-panel.png` | Built-in `image_gen` + chroma-key removal | Middle-right upgrades backing |
 | Button plate | `assets/ui/button-plate.png` | Built-in `image_gen` + chroma-key removal | Shop/action button art |
 | Purchased upgrade badge | `assets/ui/upgrade-badge.png` | Built-in `image_gen` + chroma-key removal | Individual owned-upgrade rows with centered text |
-| Shop skill icon atlas | `assets/ui/shop-skill-icons.png` | Built-in `image_gen` + chroma-key removal | 5x2 atlas for shop skill card icons |
+| Skill icon atlas | `assets/ui/skill-icons.png` | Built-in `image_gen` + chroma-key removal | 5x2 atlas for shop skill card icons |
 
 Audio is generated in memory by `scripts/sound_factory.gd`; no sound files are currently required.
 
@@ -555,10 +553,10 @@ Wheel (Control, 400x400, centered)
 - Create: `scripts/wheel.gd`
 
 **Key behavior:**
-- On spin button click: check can afford → start spin animation → calculate result → animate to result segment → show popup
+- On spin button click: check can afford → start spin animation → calculate result → animate to result segment → show floating feedback
 - Animation: ease-out cubic, 3-5 full rotations
 - Spin duration affected by Quick Spin skill
-- Result popup shows delta with color coding
+- Floating result feedback shows delta with color coding
 
 **Code:**
 ```gdscript
@@ -716,58 +714,33 @@ func _draw():
 
 ---
 
-#### Task 6: Build result popup
+#### Task 6: Build floating result feedback
 
 **Files:**
-- Create: `scenes/result_popup.tscn`
-- Create: `scripts/result_popup.gd`
+- Implement inline in `scripts/main.gd`
 
-**Scene tree:**
-```
-ResultPopup (CanvasLayer)
-├── Background (ColorRect, transparent)
-└── VBoxContainer
-    ├── ResultLabel (Label, large, centered)
-    └── TotalLabel (Label, smaller, "Total: XX")
-```
+**Behavior:**
+- Spawn a short-lived floating label near the coin HUD after spin rewards, spin costs, and shop purchases.
+- Use compact values in the floating label and full values where tooltips are available.
+- Do not reintroduce the removed result popup scene/script pair.
 
 **Code:**
 ```gdscript
-# scripts/result_popup.gd
-extends CanvasLayer
+# scripts/main.gd
+func _show_coin_delta(delta: int, color: Color):
+    if delta == 0:
+        return
 
-@export var result_label: Label
-@export var total_label: Label
-
-func show_result(delta: int, outcome_color: Color):
-    if delta > 0:
-        result_label.text = "+" + str(delta)
-    elif delta < 0:
-        result_label.text = str(delta)
-    else:
-        result_label.text = "—"
-
-    result_label.add_theme_color_override("font_color", outcome_color)
-    total_label.text = "Total: " + str(Game.coins)
-
+    var label = Label.new()
+    label.text = UiFormat.signed_compact(delta)
+    label.add_theme_color_override("font_color", color)
+    add_child(label)
     var tween = create_tween()
-    tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
-    tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
-    tween.tween_property(self, "modulate:a", 0.0, 1.5)
-    tween.tween_callback(queue_free)
-
-func _ready():
-    anchor_left = 0.5
-    anchor_top = 0.5
-    anchor_right = 0.5
-    anchor_bottom = 0.5
-    offset_left = -100
-    offset_top = -50
-    offset_right = 100
-    offset_bottom = 50
+    tween.tween_property(label, "modulate:a", 0.0, 0.65)
+    tween.tween_callback(label.queue_free)
 ```
 
-**Verify:** Popup shows result with correct color, scales in, fades out after 1.5s
+**Verify:** Floating result shows correct sign/color and fades out cleanly.
 
 ---
 
@@ -1156,7 +1129,7 @@ Main (Control, 1280x720)
 6. Stats panel right side (total spins, cycles, skills, best score)
 7. Set as main scene in `project.godot`
 8. Wire signals:
-   - `Game.spin_completed` → show result popup
+   - `Game.spin_completed` → show floating result feedback
    - `Game.shop_requested` (via `show_shop` flag) → instantiate shop
    - `Game.game_ended` → instantiate end screen (only on jackpot)
    - End screen close → `Game.reset_run()`
