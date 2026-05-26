@@ -411,3 +411,11 @@ Use this section for hands-on review. Keep these unchecked until the behavior is
 - [x] Extended `scripts/verify_polish_runtime.gd` to press the actual main-menu Run History button from an instantiated main scene and verify it opens the Run History modal empty state.
 - [x] After main-menu Run History button coverage, `godot --headless --path . --log-file /tmp/wheelylucky-polish-runtime.log --script res://scripts/verify_polish_runtime.gd` completed and verified runtime polish behavior.
 - [x] After main-menu Run History button coverage, `godot --headless --path . --log-file /tmp/wheelylucky-polish-smoke.log --script res://scripts/verify_polish.gd` completed and verified requested polish source paths.
+- [x] Replaced the late-wheel large-number cliffs with the smoothed `wheel_balance.md` curve: W4-W10 costs now progress from `250` to `200000`, and W2-W9 Plus outcomes stay net-positive while later wheels still need more spins to advance.
+- [x] Implemented the smoothed balance in `scripts/wheel_config.gd`, including lower losses, lower multipliers, W10 `-100000` non-jackpot loss, and W10 jackpot payout from the `200000` spin cost.
+- [x] Updated `scripts/verify_polish.gd` to guard the smoothed balance documentation and matching Godot config values.
+- [x] Fixed invalid GDScript in `scripts/wheel_config.gd`'s Momentum slot modifier so Godot can parse the project during balance verification.
+- [x] After smoothed balance implementation, `python3 scripts/sim_playtime.py 1 --gd-only` completed and parsed the current Godot balance config.
+- [x] After smoothed balance implementation, `godot --headless --path . --log-file /tmp/wheelylucky-polish-smoke.log --script res://scripts/verify_polish.gd` completed and verified requested polish source paths.
+- [x] After smoothed balance implementation, `godot --headless --path . --log-file /tmp/wheelylucky-polish-runtime.log --script res://scripts/verify_polish_runtime.gd` completed and verified runtime polish behavior.
+- [x] After smoothed balance implementation, `godot --headless --path . --log-file /tmp/wheelylucky-godot.log --quit` and `godot --headless --path . --log-file /tmp/wheelylucky-run.log --quit-after 3` completed without project errors in their logs.

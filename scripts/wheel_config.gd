@@ -36,71 +36,71 @@ static func _get_wheel_1():
 
 static func _get_wheel_2():
 	return [
-		_mo("+60", OP_ADD, 60.0, 50, POSITIVE),
-		_mo("-1", OP_SUBTRACT, 1.0, 30, NEGATIVE),
-		_mo("x9", OP_MULTIPLY, 9.0, 10, MULTIPLY),
+		_mo("+91", OP_ADD, 91.0, 50, POSITIVE),
+		_mo("-2", OP_SUBTRACT, 2.0, 30, NEGATIVE),
+		_mo("x3", OP_MULTIPLY, 3.0, 10, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 30, SAFE),
 	]
 
 static func _get_wheel_3():
 	return [
-		_mo("+160", OP_ADD, 160.0, 51, POSITIVE),
-		_mo("-8", OP_SUBTRACT, 8.0, 35, NEGATIVE),
-		_mo("x12", OP_MULTIPLY, 12.0, 9, MULTIPLY),
+		_mo("+225", OP_ADD, 225.0, 51, POSITIVE),
+		_mo("-5", OP_SUBTRACT, 5.0, 35, NEGATIVE),
+		_mo("x4", OP_MULTIPLY, 4.0, 9, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 25, SAFE),
 	]
 
 static func _get_wheel_4():
 	return [
-		_mo("+450", OP_ADD, 450.0, 52, POSITIVE),
-		_mo("-49", OP_SUBTRACT, 49.0, 40, NEGATIVE),
-		_mo("x12", OP_MULTIPLY, 12.0, 8, MULTIPLY),
+		_mo("+668", OP_ADD, 668.0, 52, POSITIVE),
+		_mo("-18", OP_SUBTRACT, 18.0, 40, NEGATIVE),
+		_mo("x4", OP_MULTIPLY, 4.0, 8, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 20, SAFE),
 	]
 
 static func _get_wheel_5():
 	return [
-		_mo("+1800", OP_ADD, 1800.0, 53, POSITIVE),
-		_mo("-262", OP_SUBTRACT, 262.0, 45, NEGATIVE),
-		_mo("x14", OP_MULTIPLY, 14.0, 7, MULTIPLY),
+		_mo("+2006", OP_ADD, 2006.0, 53, POSITIVE),
+		_mo("-60", OP_SUBTRACT, 60.0, 45, NEGATIVE),
+		_mo("x4", OP_MULTIPLY, 4.0, 7, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 15, SAFE),
 	]
 
 static func _get_wheel_6():
 	return [
-		_mo("+7500", OP_ADD, 7500.0, 54, POSITIVE),
-		_mo("-1375", OP_SUBTRACT, 1375.0, 50, NEGATIVE),
-		_mo("x16", OP_MULTIPLY, 16.0, 6, MULTIPLY),
+		_mo("+6019", OP_ADD, 6019.0, 54, POSITIVE),
+		_mo("-200", OP_SUBTRACT, 200.0, 50, NEGATIVE),
+		_mo("x3", OP_MULTIPLY, 3.0, 6, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 10, SAFE),
 	]
 
 static func _get_wheel_7():
 	return [
-		_mo("+27000", OP_ADD, 27000.0, 55, POSITIVE),
-		_mo("-5962", OP_SUBTRACT, 5962.0, 50, NEGATIVE),
-		_mo("x18", OP_MULTIPLY, 18.0, 5, MULTIPLY),
+		_mo("+17298", OP_ADD, 17298.0, 55, POSITIVE),
+		_mo("-638", OP_SUBTRACT, 638.0, 50, NEGATIVE),
+		_mo("x3", OP_MULTIPLY, 3.0, 5, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 10, SAFE),
 	]
 
 static func _get_wheel_8():
 	return [
-		_mo("+190000", OP_ADD, 190000.0, 56, POSITIVE),
-		_mo("-54250", OP_SUBTRACT, 54250.0, 55, NEGATIVE),
-		_mo("x18", OP_MULTIPLY, 18.0, 4, MULTIPLY),
+		_mo("+49016", OP_ADD, 49016.0, 56, POSITIVE),
+		_mo("-1980", OP_SUBTRACT, 1980.0, 55, NEGATIVE),
+		_mo("x3", OP_MULTIPLY, 3.0, 4, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 5, SAFE),
 	]
 
 static func _get_wheel_9():
 	return [
-		_mo("+1700000", OP_ADD, 1700000.0, 58, POSITIVE),
-		_mo("-532500", OP_SUBTRACT, 532500.0, 55, NEGATIVE),
-		_mo("x20", OP_MULTIPLY, 20.0, 2, MULTIPLY),
+		_mo("+140568", OP_ADD, 140568.0, 58, POSITIVE),
+		_mo("-6175", OP_SUBTRACT, 6175.0, 55, NEGATIVE),
+		_mo("x4", OP_MULTIPLY, 4.0, 2, MULTIPLY),
 		_mo("0", OP_NONE, 0.0, 5, SAFE),
 	]
 
 static func _get_wheel_10():
 	return [
-		_mo("-6000000", OP_SUBTRACT, 6000000.0, 40, NEGATIVE),
+		_mo("-100000", OP_SUBTRACT, 100000.0, 40, NEGATIVE),
 		_mo("JACKPOT", OP_MULTIPLY, 10.0, 1, JACKPOT),
 		_mo("0", OP_NONE, 0.0, 79, SAFE),
 	]
@@ -117,14 +117,14 @@ static func get_cost(wheel_num: int) -> int:
 		1: return 0
 		2: return 25
 		3: return 75
-		4: return 300
-		5: return 1200
-		6: return 5000
-		7: return 18000
-		8: return 140000
-		9: return 1200000
-		10: return 12000000
-	return 12000000
+		4: return 250
+		5: return 800
+		6: return 2500
+		7: return 7500
+		8: return 22000
+		9: return 65000
+		10: return 200000
+	return 200000
 
 static func get_outcomes(wheel_num: int):
 	var raw_outcomes
@@ -203,7 +203,7 @@ static func apply_skill_modifiers(outcomes, game, wheel_num):
 				elif o[IDX_OP] == OP_SUBTRACT and int(o[IDX_SLOTS]) > 0:
 					src.append(o)
 			if pos.size() > 0 and src.size() > 0:
-				src.sort_custom(func(s): return int(s[IDX_SLOTS])) # most slots first
+				src.sort_custom(func(a, b): return int(a[IDX_SLOTS]) < int(b[IDX_SLOTS]))
 				src[-1][IDX_SLOTS] -= 1
 				pos[_i % pos.size()][IDX_SLOTS] += 1
 
@@ -213,13 +213,15 @@ static func apply_skill_modifiers(outcomes, game, wheel_num):
 		var per_stack = SkillEffects.MOMENTUM_POSITIVE_SLOTS_PER_STACK
 		var bonus_slots = min(game.momentum_stacks * per_stack, max_bonus)
 		for _i in range(bonus_slots):
-			var plus = [o for o in outcomes if o[IDX_OP] == OP_ADD]
+			var plus = []
 			var src = []
 			for o in outcomes:
-				if o[IDX_OP] != OP_ADD and int(o[IDX_SLOTS]) > 0:
+				if o[IDX_OP] == OP_ADD:
+					plus.append(o)
+				elif int(o[IDX_SLOTS]) > 0:
 					src.append(o)
 			if plus.size() > 0 and src.size() > 0:
-				src.sort_custom(func(s): return int(s[IDX_SLOTS]))
+				src.sort_custom(func(a, b): return int(a[IDX_SLOTS]) < int(b[IDX_SLOTS]))
 				src[-1][IDX_SLOTS] -= 1
 				plus[_i % plus.size()][IDX_SLOTS] += 1
 
