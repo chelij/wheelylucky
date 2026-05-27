@@ -7,7 +7,9 @@ var reduced_motion_signal_seen := false
 var muted_flashes_signal_seen := false
 var large_ui_text_signal_seen := false
 var history_signal_seen := false
+var credits_signal_seen := false
 var tutorial_signal_seen := false
+var save_signal_seen := false
 var original_save_config: ConfigFile = null
 var save_manager: Node = null
 var game: Node = null
@@ -60,16 +62,16 @@ func _verify_main_menu_runtime() -> void:
 	_assert_no_runtime_tooltips(menu, "main menu")
 	_assert_no_descendant_label(menu, "Coin Breakdown", "Main menu should not show coin breakdown")
 
-	var sign := menu.get_node_or_null("TutorialSign") as Label
+	var sign := menu.get_node_or_null("TutorialSign") as Control
 	if sign == null:
 		_fail("Tutorial sign should appear when tutorial_sign_seen is false")
 	else:
 		if sign.mouse_filter != Control.MOUSE_FILTER_IGNORE:
 			_fail("Tutorial sign should be click-through")
-		if sign.horizontal_alignment != HORIZONTAL_ALIGNMENT_RIGHT:
-			_fail("Tutorial sign should right-align toward the tutorial button")
 		if sign.position.x < 18.0:
 			_fail("Tutorial sign should stay within the viewport")
+		if sign.get_node_or_null("ArrowHead") == null:
+			_fail("Tutorial sign should use the graphic arrow treatment")
 
 	if not bool(menu.get("tutorial_sign_tween") != null):
 		_fail("Tutorial sign should bob when reduced motion is off")
@@ -83,6 +85,7 @@ func _verify_main_menu_runtime() -> void:
 		_fail("Tutorial sign tween should stop when reduced motion is enabled")
 
 	menu.connect("history_requested", func(): history_signal_seen = true)
+	menu.connect("credits_requested", func(): credits_signal_seen = true)
 	menu.connect("tutorial_requested", func(): tutorial_signal_seen = true)
 
 	var history_button := menu.get_node_or_null("MenuPanel/MenuVBox/HistoryButton") as Button
@@ -92,6 +95,11 @@ func _verify_main_menu_runtime() -> void:
 		history_button.pressed.emit()
 
 	var tutorial_button := menu.get_node_or_null("TutorialButton") as Button
+	var credits_button := menu.get_node_or_null("MenuPanel/MenuVBox/CreditsButton") as Button
+	if credits_button == null:
+		_fail("Credits button missing from main menu")
+	else:
+		credits_button.pressed.emit()
 	if tutorial_button == null:
 		_fail("Tutorial button missing from main menu")
 	else:
@@ -104,8 +112,17 @@ func _verify_main_menu_runtime() -> void:
 
 	if not history_signal_seen:
 		_fail("Run History button did not emit history_requested")
+	if not credits_signal_seen:
+		_fail("Credits button did not emit credits_requested")
 	if not tutorial_signal_seen:
 		_fail("Tutorial button did not emit tutorial_requested")
+	if root.gui_get_focus_owner() != null:
+		_fail("Main menu should not show focus borders before keyboard/controller navigation starts")
+	menu.call("focus_default_control")
+	await process_frame
+	_expect_focus_owner(menu, "MenuPanel/MenuVBox/NewGameButton", "Main menu should focus New Game after keyboard/controller navigation starts")
+	_expect_focus_neighbor(menu, "MenuPanel/MenuVBox/NewGameButton", "right", "TutorialButton", "Main menu should let controller focus reach the tutorial button")
+	_expect_focus_neighbor(menu, "TutorialButton", "left", "MenuPanel/MenuVBox/NewGameButton", "Tutorial button should return focus to the menu buttons")
 
 	_free_node(menu)
 	await process_frame
@@ -135,7 +152,7 @@ func _verify_options_runtime() -> void:
 		"window_mode": "windowed",
 		"resolution": "1024x768",
 		"music_volume": 0.0,
-		"sfx_volume": 0.8,
+		"sfx_volume": 0.5,
 		"reduced_motion": false,
 		"muted_flashes": false,
 		"large_ui_text": false,
@@ -151,6 +168,13 @@ func _verify_options_runtime() -> void:
 		_fail("Options panel missing")
 	elif panel.custom_minimum_size.y < 660.0:
 		_fail("Options panel should have enough height for accessibility and audio warnings")
+	if root.gui_get_focus_owner() != null:
+		_fail("Options should not show focus borders before keyboard/controller navigation starts")
+	options.call("focus_default_control")
+	await process_frame
+	_expect_focus_owner(options, "CenterContainer/Panel/VBox/WindowModeSelector", "Options should focus Window Mode after keyboard/controller navigation starts")
+	_expect_focus_neighbor(options, "CenterContainer/Panel/VBox/WindowModeSelector", "bottom", "CenterContainer/Panel/VBox/ResolutionSelector", "Options should move down from Window Mode to Resolution")
+	_expect_focus_neighbor(options, "CenterContainer/Panel/VBox/LargeUiTextCheck", "bottom", "CenterContainer/Panel/VBox/BackButton", "Options should move from accessibility toggles to Back")
 
 	options.connect("setting_changed", func(key: String, value):
 		if key == "music_volume" and abs(float(value) - 0.5) < 0.001:
@@ -201,6 +225,28 @@ func _verify_options_runtime() -> void:
 	_free_node(options)
 	await process_frame
 
+	var in_game_options := options_scene.instantiate()
+	root.add_child(in_game_options)
+	await process_frame
+	in_game_options.call("configure", cramped_muted_settings, ["1024x768", "1280x720"], true)
+	await process_frame
+	in_game_options.connect("save_requested", func(): save_signal_seen = true)
+	var save_button := in_game_options.get_node_or_null("CenterContainer/Panel/VBox/SaveButton") as Button
+	if save_button == null:
+		_fail("In-game Save button missing")
+	elif not save_button.visible:
+		_fail("In-game Save button should be visible")
+	else:
+		save_button.pressed.emit()
+	in_game_options.call("focus_default_control")
+	await process_frame
+	_expect_focus_neighbor(in_game_options, "CenterContainer/Panel/VBox/LargeUiTextCheck", "bottom", "CenterContainer/Panel/VBox/SaveButton", "In-game options should move from accessibility toggles to Save")
+	_expect_focus_neighbor(in_game_options, "CenterContainer/Panel/VBox/SaveButton", "bottom", "CenterContainer/Panel/VBox/SaveExitButton", "In-game options should move from Save to Save & Exit")
+	if not save_signal_seen:
+		_fail("Save button did not emit save_requested")
+	_free_node(in_game_options)
+	await process_frame
+
 	var tutorial_scene := load("res://scenes/tutorial_modal.tscn") as PackedScene
 	if tutorial_scene == null:
 		_fail("Tutorial scene could not be loaded")
@@ -214,6 +260,19 @@ func _verify_options_runtime() -> void:
 	await process_frame
 
 func _verify_run_history_runtime() -> void:
+	game.set("coins", 777)
+	game.set("selected_wheel", 4)
+	game.set("shop_available", true)
+	game.call("set_pending_shop_skill_ids", ["coin_magnet"])
+	game.call("save_current_run")
+	game.call("reset_run", false)
+	if not game.call("load_saved_run"):
+		_fail("Saved run should reload successfully during runtime verification")
+	elif not bool(game.get("shop_available")):
+		_fail("Saved run should restore pending shop availability")
+	elif (game.call("get_pending_shop_skills") as Array).is_empty():
+		_fail("Saved run should restore pending shop skill offers")
+
 	for index in range(14):
 		save_manager.call("add_run_history", {
 			"run_id": index,
@@ -253,7 +312,7 @@ func _verify_end_screen_breakdown_runtime() -> void:
 	game.set("run_skill_payout", 3000)
 	game.set("run_spin_costs", 555)
 	game.set("run_shop_spent", 2100)
-	game.set("run_color_counts", {"green": 2, "red": 1, "gold": 1, "purple": 0, "grey": 3, "jackpot": 1})
+	game.set("run_color_counts", {"green": 2, "red": 1, "gold": 1, "grey": 3, "jackpot": 1})
 	game.set("bought_skill_order", [])
 	game.set("skill_levels", {})
 	game.set("unique_skills", [])
@@ -277,6 +336,12 @@ func _verify_end_screen_breakdown_runtime() -> void:
 	await process_frame
 	if _count_descendant_labels(end_screen, "Coin Breakdown") != 1:
 		_fail("End screen should not duplicate Coin Breakdown when populated twice")
+	if root.gui_get_focus_owner() != null:
+		_fail("End screen should not show focus borders before keyboard/controller navigation starts")
+	end_screen.call("focus_default_control")
+	await process_frame
+	_expect_focus_owner(end_screen, "EndLayout/Panel/Content/ActionRow/PlayAgainButton", "End screen should focus Play Again after keyboard/controller navigation starts")
+	_expect_focus_neighbor(end_screen, "EndLayout/Panel/Content/ActionRow/PlayAgainButton", "right", "EndLayout/Panel/Content/ActionRow/MainMenuButton", "End screen action buttons should support controller left/right movement")
 
 	var jackpot_sound := end_screen.get_node_or_null("JackpotSound") as AudioStreamPlayer
 	if jackpot_sound != null:
@@ -297,7 +362,7 @@ func _verify_visual_effect_runtime() -> void:
 	_assert_no_runtime_tooltips(main, "main scene")
 	_assert_no_descendant_label(main, "Coin Breakdown", "Main scene should not show coin breakdown outside end/history surfaces")
 
-	await _verify_main_layout(main, Vector2i(1024, 768), true, "narrow game")
+	await _verify_main_layout(main, Vector2i(1024, 768), false, "narrow game")
 	await _verify_main_layout(main, Vector2i(3440, 1440), false, "ultrawide game")
 	main.call("_layout_game_ui", Vector2(1280, 720))
 	await process_frame
@@ -319,7 +384,7 @@ func _verify_visual_effect_runtime() -> void:
 		if abs(result_sound.volume_db - linear_to_db(0.25)) > 0.01:
 			_fail("SFX volume should apply to result sound players")
 
-	main.call("_apply_audio_settings", 0.6, 0.8)
+	main.call("_apply_audio_settings", 0.6, 0.5)
 	await process_frame
 	if music_player != null:
 		if music_player.stream_paused:
@@ -350,7 +415,17 @@ func _verify_visual_effect_runtime() -> void:
 	if main_menu == null:
 		_fail("Main scene should instantiate the main menu layer")
 	else:
+		if root.gui_get_focus_owner() != null:
+			_fail("Main scene should not show menu focus borders before keyboard/controller navigation starts")
+		main.call("_set_navigation_focus_enabled", true)
+		await process_frame
+		_expect_focus_owner(main_menu, "MenuPanel/MenuVBox/NewGameButton", "Main scene should focus New Game once keyboard/controller navigation starts")
+		main.call("_set_navigation_focus_enabled", false)
+		await process_frame
+		if root.gui_get_focus_owner() != null:
+			_fail("Main scene should clear menu focus borders after mouse input mode resumes")
 		var menu_history_button := main_menu.get_node_or_null("MenuPanel/MenuVBox/HistoryButton") as Button
+		var menu_credits_button := main_menu.get_node_or_null("MenuPanel/MenuVBox/CreditsButton") as Button
 		if menu_history_button == null:
 			_fail("Main scene main-menu Run History button missing")
 		else:
@@ -363,6 +438,19 @@ func _verify_visual_effect_runtime() -> void:
 				_assert_no_runtime_tooltips(menu_history_modal, "main-menu opened run history modal")
 				_expect_descendant_label(menu_history_modal, "Run History", "Main-menu opened Run History modal should show title")
 				_expect_descendant_label(menu_history_modal, "No completed runs yet", "Main-menu opened Run History modal should show empty state")
+			main.call("_close_modal")
+			await process_frame
+		if menu_credits_button == null:
+			_fail("Main scene main-menu Credits button missing")
+		else:
+			menu_credits_button.pressed.emit()
+			await process_frame
+			var credits_modal := main.get_node_or_null("Modal")
+			if credits_modal == null:
+				_fail("Main-menu Credits button should open the Credits modal")
+			else:
+				_expect_descendant_label(credits_modal, "Credits", "Credits modal should show title")
+				_expect_descendant_label_contains(credits_modal, "Wheely Lucky ships CC0 assets", "Credits modal should list shipped asset notes")
 			main.call("_close_modal")
 			await process_frame
 
@@ -438,15 +526,15 @@ func _verify_visual_effect_runtime() -> void:
 	var jackpot_start := _count_direct_effect_particles(main)
 	main.call("_play_result_polish", {"outcome_label": "JACKPOT", "spun_wheel": 10, "outcome_color": Color(1.0, 0.82, 0.24, 1.0)})
 	await process_frame
-	if _count_direct_effect_particles(main) - jackpot_start != 34:
-		_fail("Jackpot result polish should dispatch a 34-particle burst")
+	if _count_direct_effect_particles(main) - jackpot_start != 88:
+		_fail("Jackpot result polish should dispatch the upgraded celebration burst")
 	_clear_direct_effect_particles(main)
 
 	var multiplier_start := _count_direct_effect_particles(main)
 	main.call("_play_result_polish", {"outcome_label": "x12", "spun_wheel": 4, "outcome_color": Color(0.65, 0.35, 1.0, 1.0)})
 	await process_frame
-	if _count_direct_effect_particles(main) - multiplier_start != 18:
-		_fail("Multiplier result polish should dispatch an 18-particle burst")
+	if _count_direct_effect_particles(main) - multiplier_start != 24:
+		_fail("Multiplier result polish should dispatch the upgraded burst")
 	_clear_direct_effect_particles(main)
 
 	var wheel := main.get_node_or_null("Wheel") as Control
@@ -457,8 +545,8 @@ func _verify_visual_effect_runtime() -> void:
 		var original_wheel_scale := wheel.scale
 		var original_canvas_transform := root.canvas_transform
 		main.call("_play_result_polish", {"outcome_label": "JACKPOT", "spun_wheel": 10, "outcome_color": Color(1.0, 0.82, 0.24, 1.0)})
-		await create_timer(0.08).timeout
-		_assert_wheel_focus_unchanged(wheel, original_wheel_position, original_wheel_scale, original_canvas_transform, "Jackpot result polish should not dispatch Wheel 10 focus movement")
+		await create_timer(0.12).timeout
+		_assert_wheel_focus_unchanged(wheel, original_wheel_position, original_wheel_scale, original_canvas_transform, "Standalone jackpot result polish should not assume a near-jackpot wheel state")
 		_clear_direct_effect_particles(main)
 
 		main.call("_play_result_polish", {"outcome_label": "x12", "spun_wheel": 4, "outcome_color": Color(0.65, 0.35, 1.0, 1.0)})
@@ -467,20 +555,15 @@ func _verify_visual_effect_runtime() -> void:
 		_clear_direct_effect_particles(main)
 
 		main.call("_play_result_polish", {"outcome_label": "-6000000", "spun_wheel": 10, "outcome_color": Color(1.0, 0.2, 0.2, 1.0)})
-		await create_timer(0.08).timeout
-		var result_focus_moved := wheel.position != original_wheel_position or wheel.scale != original_wheel_scale or root.canvas_transform != original_canvas_transform
-		if not result_focus_moved:
-			_fail("Wheel 10 non-jackpot result polish should dispatch focus movement")
-		await create_timer(0.82).timeout
-		if wheel.position != original_wheel_position or wheel.scale.distance_to(original_wheel_scale) > 0.001 or root.canvas_transform != original_canvas_transform:
-			_fail("Wheel 10 result-dispatched focus should restore wheel and viewport state")
+		await create_timer(0.12).timeout
+		_assert_wheel_focus_unchanged(wheel, original_wheel_position, original_wheel_scale, original_canvas_transform, "Standalone Wheel 10 result polish should not assume a near-jackpot wheel state")
 
 		main.call("_play_w10_loss_focus")
-		await create_timer(0.08).timeout
+		await create_timer(0.12).timeout
 		var focus_moved := wheel.position != original_wheel_position or wheel.scale != original_wheel_scale or root.canvas_transform != original_canvas_transform
 		if not focus_moved:
 			_fail("Wheel 10 focus should move the wheel or zoom the viewport during the tween")
-		await create_timer(0.82).timeout
+		await create_timer(1.0).timeout
 		if wheel.position != original_wheel_position:
 			_fail("Wheel 10 focus should restore wheel position")
 		if wheel.scale.distance_to(original_wheel_scale) > 0.001:
@@ -506,8 +589,8 @@ func _verify_visual_effect_runtime() -> void:
 			var sparkles_before := _count_direct_effect_particles(main)
 			main.call("_pulse_wheel_indicator")
 			await process_frame
-			if _count_direct_effect_particles(main) - sparkles_before != 10:
-				_fail("Indicator pulse should create exactly 10 sparkle particles")
+			if _count_direct_effect_particles(main) - sparkles_before != 16:
+				_fail("Indicator pulse should create exactly 16 sparkle particles")
 			if prev_button.scale != prev_scale:
 				_fail("Indicator pulse should not scale the previous wheel selector")
 			if next_button.scale != next_scale:
@@ -522,20 +605,23 @@ func _verify_visual_effect_runtime() -> void:
 	main.set("muted_flashes_enabled", false)
 	var triggered_sparkles_before := _count_direct_effect_particles(main)
 	main.call("_on_spin_finished", ["+25", 0, 25.0, 60, Color(0.2, 0.8, 0.3, 1.0)])
-	await process_frame
-	await process_frame
-	if _count_direct_effect_particles(main) - triggered_sparkles_before != 10:
-		_fail("Successful spin should sparkle the pointer indicator when a higher wheel becomes affordable")
+	await create_timer(0.08).timeout
+	if wheel != null and wheel.call("can_start_spin"):
+		_fail("Wheel should not allow another spin while coin resolution animations are still counting")
+	await create_timer(0.82).timeout
+	if _count_direct_effect_particles(main) - triggered_sparkles_before != 16:
+		_fail("Successful spin should sparkle the next-wheel arc when a higher wheel becomes affordable")
 	if int(main.get("last_highest_affordable_wheel")) < 2:
 		_fail("Successful spin should update last highest affordable wheel after indicator sparkle")
+	if wheel != null and not wheel.call("can_start_spin"):
+		_fail("Wheel should allow spinning again after coin resolution animations finish")
 	_clear_direct_effect_particles(main)
 
 	var no_new_sparkles_before := _count_direct_effect_particles(main)
 	main.call("_on_spin_finished", ["0", 4, 0.0, 60, Color(0.5, 0.5, 0.5, 1.0)])
-	await process_frame
-	await process_frame
+	await create_timer(0.82).timeout
 	if _count_direct_effect_particles(main) != no_new_sparkles_before:
-		_fail("Spin should not sparkle the pointer indicator when highest affordable wheel does not increase")
+		_fail("Spin should not sparkle the next-wheel arc when highest affordable wheel does not increase")
 	_clear_direct_effect_particles(main)
 
 	_free_audio_streams(main)
@@ -547,10 +633,20 @@ func _verify_visual_effect_runtime() -> void:
 		_fail("Shop scene could not be loaded")
 		return
 	var shop := shop_scene.instantiate()
+	game.set("coins", 500)
+	game.call("set_pending_shop_skill_ids", ["coin_magnet", "discount_card", "momentum"])
 	root.add_child(shop)
 	await process_frame
 	_assert_no_runtime_tooltips(shop, "shop scene")
 	_assert_no_descendant_label(shop, "Coin Breakdown", "Shop scene should not show coin breakdown")
+	if root.gui_get_focus_owner() != null:
+		_fail("Shop should not show focus borders before keyboard/controller navigation starts")
+	shop.call("focus_default_control")
+	await process_frame
+	_expect_focus_owner(shop, "CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton", "Shop should focus the first affordable skill after keyboard/controller navigation starts")
+	_expect_focus_neighbor(shop, "CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton", "right", "CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content/BuyButton", "Shop should allow controller movement across the skill row")
+	_expect_focus_neighbor(shop, "CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton", "bottom", "CenterContainer/ShopPanel/ShopVBox/ContinueButton", "Shop should allow controller movement from skills down to Continue")
+	_expect_focus_neighbor(shop, "CenterContainer/ShopPanel/ShopVBox/ContinueButton", "top", "CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton", "Shop Continue should return focus to the skill row")
 	_free_audio_streams(shop)
 	_free_node(shop)
 	await process_frame
@@ -589,17 +685,15 @@ func _verify_main_layout(main: Node, viewport_size: Vector2i, expect_compact_pan
 	_expect_control_inside(main, "Wheel", Vector2(viewport_size), context + " keeps wheel inside viewport")
 	_expect_control_inside(main, "InGameOptionsButton", Vector2(viewport_size), context + " keeps options button inside viewport")
 	_expect_control_inside(main, "InGameHelpButton", Vector2(viewport_size), context + " keeps help button inside viewport")
-	var probability_panel := main.get_node_or_null("ProbabilityPanel") as Control
 	var stats_panel := main.get_node_or_null("StatsPanel") as Control
-	if probability_panel == null or stats_panel == null:
-		_fail(context + " has side panels")
+	if stats_panel == null:
+		_fail(context + " has the stats panel")
 	elif expect_compact_panels:
-		if probability_panel.visible or stats_panel.visible:
-			_fail(context + " should hide side panels in compact layout")
+		if stats_panel.visible:
+			_fail(context + " should hide the stats panel in compact layout")
 	else:
-		if not probability_panel.visible or not stats_panel.visible:
-			_fail(context + " should show side panels in wide layout")
-		_expect_control_inside(main, "ProbabilityPanel", Vector2(viewport_size), context + " keeps probability panel inside viewport")
+		if not stats_panel.visible:
+			_fail(context + " should show the stats panel in wide layout")
 		_expect_control_inside(main, "StatsPanel", Vector2(viewport_size), context + " keeps stats panel inside viewport")
 
 func _expect_control_inside(root_node: Node, path: String, viewport_size: Vector2, label: String) -> void:
@@ -612,6 +706,41 @@ func _expect_control_inside(root_node: Node, path: String, viewport_size: Vector
 	var bottom_right := control.position + control.size * control.scale
 	if bottom_right.x > viewport_size.x + 0.5 or bottom_right.y > viewport_size.y + 0.5:
 		_fail(label + " exceeds viewport: " + str(bottom_right) + " > " + str(viewport_size))
+
+func _expect_focus_owner(root_node: Node, path: String, label: String) -> void:
+	var control := root_node.get_node_or_null(path) as Control
+	if control == null:
+		_fail(label + " missing: " + path)
+		return
+	var owner := root.gui_get_focus_owner()
+	if owner != control:
+		_fail(label)
+
+func _expect_focus_neighbor(root_node: Node, path: String, direction: String, expected_path: String, label: String) -> void:
+	var control := root_node.get_node_or_null(path) as Control
+	var expected := root_node.get_node_or_null(expected_path) as Control
+	if control == null or expected == null:
+		_fail(label + " missing focus controls")
+		return
+	var actual_path := NodePath("")
+	match direction:
+		"top":
+			actual_path = control.focus_neighbor_top
+		"bottom":
+			actual_path = control.focus_neighbor_bottom
+		"left":
+			actual_path = control.focus_neighbor_left
+		"right":
+			actual_path = control.focus_neighbor_right
+		_:
+			_fail(label + " invalid direction: " + direction)
+			return
+	if actual_path.is_empty():
+		_fail(label + " has no focus neighbor")
+		return
+	var actual := control.get_node_or_null(actual_path) as Control
+	if actual != expected:
+		_fail(label)
 
 func _assert_wheel_focus_unchanged(wheel: Control, original_position: Vector2, original_scale: Vector2, original_canvas_transform: Transform2D, label: String) -> void:
 	if wheel.position != original_position or wheel.scale.distance_to(original_scale) > 0.001 or root.canvas_transform != original_canvas_transform:

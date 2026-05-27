@@ -7,15 +7,15 @@ var config: ConfigFile
 const DEFAULT_SETTINGS := {
 	"window_mode": "windowed",
 	"resolution": "1280x720",
-	"music_volume": 0.65,
-	"sfx_volume": 0.8,
+	"music_volume": 0.5,
+	"sfx_volume": 0.5,
 	"reduced_motion": false,
 	"muted_flashes": false,
 	"large_ui_text": false,
 	"tutorial_sign_seen": false,
 }
 
-const COLOR_KEYS := ["green", "red", "gold", "purple", "grey", "jackpot"]
+const COLOR_KEYS := ["green", "red", "gold", "grey", "jackpot"]
 const MAX_RUN_HISTORY := 12
 
 func _ready():

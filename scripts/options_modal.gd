@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 signal close_requested
+signal save_requested
 signal save_exit_requested
 signal setting_changed(key: String, value)
 
@@ -14,6 +15,7 @@ signal setting_changed(key: String, value)
 @onready var reduced_motion_check: CheckBox = $CenterContainer/Panel/VBox/ReducedMotionCheck
 @onready var muted_flashes_check: CheckBox = $CenterContainer/Panel/VBox/MutedFlashesCheck
 @onready var large_ui_text_check: CheckBox = $CenterContainer/Panel/VBox/LargeUiTextCheck
+@onready var save_button: Button = $CenterContainer/Panel/VBox/SaveButton
 @onready var save_exit_button: Button = $CenterContainer/Panel/VBox/SaveExitButton
 @onready var back_button: Button = $CenterContainer/Panel/VBox/BackButton
 
@@ -55,24 +57,27 @@ func _ready() -> void:
 		if not is_configuring:
 			setting_changed.emit("large_ui_text", value)
 	)
+	save_button.pressed.connect(func(): save_requested.emit())
 	save_exit_button.pressed.connect(func(): save_exit_requested.emit())
 	back_button.pressed.connect(func(): close_requested.emit())
 
 func configure(settings: Dictionary, resolution_options: Array, in_game: bool) -> void:
 	is_configuring = true
-	panel.custom_minimum_size = Vector2(560, 720 if in_game else 660)
+	panel.custom_minimum_size = Vector2(560, 780 if in_game else 700)
+	save_button.visible = in_game
 	save_exit_button.visible = in_game
 	var current_resolution := str(settings.get("resolution", "1280x720"))
 	_populate_selector(window_mode_selector, ["Windowed", "Fullscreen"], str(settings.get("window_mode", "windowed")))
 	_populate_selector(resolution_selector, resolution_options, current_resolution)
 	_update_resolution_warning(current_resolution)
-	music_volume_slider.value = float(settings.get("music_volume", 0.65))
+	music_volume_slider.value = float(settings.get("music_volume", 0.5))
 	_update_music_muted_warning(music_volume_slider.value)
-	sfx_volume_slider.value = float(settings.get("sfx_volume", 0.8))
+	sfx_volume_slider.value = float(settings.get("sfx_volume", 0.5))
 	reduced_motion_check.button_pressed = bool(settings.get("reduced_motion", false))
 	muted_flashes_check.button_pressed = bool(settings.get("muted_flashes", false))
 	large_ui_text_check.button_pressed = bool(settings.get("large_ui_text", false))
 	is_configuring = false
+	_configure_focus_navigation(in_game)
 
 func _populate_selector(selector: OptionButton, options: Array, current_value: String) -> void:
 	selector.clear()
@@ -92,3 +97,29 @@ func _update_resolution_warning(resolution: String) -> void:
 
 func _update_music_muted_warning(value: float) -> void:
 	music_muted_label.visible = value <= 0.001
+
+func _configure_focus_navigation(in_game: bool) -> void:
+	var focusables: Array[Control] = [
+		window_mode_selector,
+		resolution_selector,
+		music_volume_slider,
+		sfx_volume_slider,
+		reduced_motion_check,
+		muted_flashes_check,
+		large_ui_text_check,
+	]
+	if in_game:
+		focusables.append(save_button)
+		focusables.append(save_exit_button)
+	focusables.append(back_button)
+	for index in range(focusables.size()):
+		var control := focusables[index]
+		if control == null:
+			continue
+		control.focus_mode = Control.FOCUS_ALL
+		control.focus_neighbor_top = focusables[maxi(index - 1, 0)].get_path()
+		control.focus_neighbor_bottom = focusables[mini(index + 1, focusables.size() - 1)].get_path()
+
+func focus_default_control() -> void:
+	if window_mode_selector != null and window_mode_selector.visible and not window_mode_selector.disabled:
+		window_mode_selector.grab_focus()

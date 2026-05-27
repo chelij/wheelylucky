@@ -14,12 +14,61 @@
 - [x] Add end-game run stats for total spins, outcome hits, skill purchases, coins earned, and coins spent.
 - [x] Add CC0 background music and record its source.
 - [x] Add a proper game logo asset and replace main-menu title text with it.
-- [x] Rename player-facing outcome labels to Plus, Minus, Multiply, Divide, None, and Jackpot.
+- [x] Rename player-facing outcome labels to Plus, Minus, Multiply, None, and Jackpot.
 - [x] Add How to Play help buttons on the main menu and in-game screen.
 - [x] Add gameplay instructions, wheel-cost notes, goal text, outcome glossary, and full skill/unique glossary to How to Play.
 - [x] Replace the How to Play scrollbar with multi-page navigation using the wheel arrow buttons.
 - [x] Run Godot import/validation after asset and script changes.
 - [x] Fix release-blocking issues found by validation.
+
+## Active Polish Task List
+
+This replaces `polish.md`. Use this section as the single source of truth for the next polish pass.
+
+- [x] Fix sequential skill coin modifiers so each owned-skill payout reads as a distinct staged event instead of all modifiers feeling simultaneous.
+- [x] Replace the current background music with an actual song-like CC0 casino/lounge track. The current asset reads like SFX, not BGM.
+- [x] Keep current button hover/press SFX behavior. User approved it.
+- [x] Keep current resolution options behavior. User confirmed it works.
+- [x] Default BGM and SFX volumes to 50% on first launch (instead of 100%).
+- [x] Re-test aspect-ratio support after the UI pass. Narrow and ultrawide layout checks now pass in runtime verification.
+- [x] Replace or redesign the logo. Current logo is not acceptable.
+- [x] Rework Wheel 10 near-jackpot tension:
+  - [x] Only trigger the dramatic effect when the wheel is stopping near the jackpot region.
+  - [x] Slow the wheel as it approaches the stop.
+  - [x] Zoom in and shake during the near-jackpot settle.
+  - [x] Delay the jackpot end-screen handoff so the player can actually see the effect.
+- [x] Make jackpot bursts much fancier and more celebratory.
+- [x] Replace the first-run tutorial text callout with a graphic treatment.
+- [x] Redesign Run History:
+  - [x] Paginate it.
+  - [x] Make it visually match the end-game screen language.
+  - [x] Remove the current rough card-list presentation.
+- [x] Keep the current end/history breakdown calculations. User confirmed the numbers are OK.
+- [x] Keep the current accessibility options behavior. User approved it.
+- [x] Re-check the resolution warning after the UI pass. Runtime verification now confirms the warning appears below 1280x720 and hides at 1280x720+.
+- [x] Replace the separate probability table with text displayed directly on the wheel segments for outcome labels and values.
+- [x] Fix UI spacing — review padding, margins, and alignment across main menu, game screen, shop, end screen, and How to Play panels.
+- [x] Rework the higher-wheel indicator sparkle/pulse so it is actually visible in normal play.
+
+## Current Polish Review
+
+- Skill coin modifier effect: updated to hold internal coin accounting while the HUD reveals each skill payout in sequence.
+- BGM: replaced with proper song-like CC0 casino/lounge track. ✓
+- Button hover and press SFX: accepted.
+- Resolution options: accepted.
+- Default volumes: updated to 50% on first launch.
+- Aspect ratio: re-checked at narrow and ultrawide sizes in runtime verification. ✓
+- Logo: switched to the alpha-safe `game-logo.png` asset and wired into the main menu.
+- Wheel 10 focus: updated to only fire in the near-jackpot zone and to give jackpot outcomes time to breathe before the end screen.
+- Jackpot bursts: upgraded into a larger multi-layer celebration pass.
+- First-run tutorial: updated from text to a graphic arrow treatment.
+- Run history: updated into a paginated summary layout styled closer to the end screen.
+- End/history breakdown: accepted.
+- Accessibility options: accepted.
+- Resolution warning: re-checked in runtime verification and now treated as complete. ✓
+- Probability display: moved off the separate panel and onto wheel segments directly with per-segment labels and values.
+- UI spacing: tightened around the single right-side upgrades panel and centered wheel layout.
+- Indicator sparkle/pulse: upgraded with a larger pulse, flash ring, and stronger sparkle burst.
 
 ## Comparable Game References
 
@@ -70,8 +119,15 @@
   - Saved/resumable run state.
   - Games-started and games-won tracking.
   - Dev coin gain multiplier.
+  - Pending shop offers now persist through Save/Continue.
 - Added in-game Options button at the top-right of the play screen.
 - Added Save & Exit from in-game Options back to the main menu.
+- Added an in-game Save action separate from Save & Exit.
+- Added confirmation before replacing a saved run with New Game.
+- Added confirmation before Save & Exit returns to the main menu.
+- Added a Credits screen from the main menu with shipped asset/source notes.
+- Added a clearer pulsing shop-available affordance on the shop button.
+- Added explicit keyboard/controller focus routing for the main menu, options modal, shop skill row, and end-screen action/build controls.
 - Added a `~` dev tools overlay and removed direct Q/W/E/A/S debug hotkey behavior.
 - Added dev tool functions:
   - Instant spin.
@@ -93,7 +149,6 @@
   - Red is now Minus.
   - Gold is now Multiply.
   - Grey is now None.
-  - Purple is now Divide.
   - Shop skill descriptions and help text now use the new outcome names.
   - Probability rows now show names, for example `Plus +25` and `None 0`.
 - Added generated end-game background:
@@ -107,31 +162,22 @@
 
 ## Missing Or Release-Blocking Items Found
 
-- No export presets are configured yet for a release build. Add `export_presets.cfg` when target platforms are decided.
+- `export_presets.cfg` is now present for desktop release targets (`Windows Desktop` and `Linux/X11`), but this machine does not currently have Godot export templates installed, so full package export is not locally verified yet.
 - Godot editor import exits successfully, but still prints `split.size()` scan warnings from existing editor filesystem metadata. Runtime validation is clean.
-- There is no pause/resume confirmation before Save & Exit. This is acceptable for now because it explicitly saves, but a confirmation would avoid accidental menu returns.
-- Continue currently resumes the run state but intentionally does not restore an unopened shop offer. This avoids serializing temporary shop choices, but it means Save & Exit should be used between spins, not during a pending shop decision.
-- There is no credits screen yet. Add one before public release because the game now ships CC0 assets with source links.
-- The How to Play panel now covers the rules and skill glossary across pages, but a short first-run callout could still help brand-new players.
 
 ## Audio / Visual Passthrough
 
-- The game now has casino-appropriate background music, but it needs an in-game listen pass for loudness against spin/shop/jackpot sounds.
-- The wheel and shop visuals have a strong identity; the main menu is functional but should eventually get bespoke button art matching the shop buttons.
+- BGM: replaced with a proper song-like CC0 casino/lounge track. ✓
+- The menu and exported app icon now use the alpha-safe `game-logo.png` logo pass.
 - The new end-game background fits the theme and leaves center space for stats, but the text panel should be checked at 1280x720, 1600x900, and fullscreen.
-- The probability panel is useful, but it is visually dense. Consider adding subtle outcome labels or icons so Minus/Plus/Multiply meaning is faster to scan.
-- The wheel itself intentionally has no labels for readability; keep the probability panel visible and accurate.
+- Outcome labels and values now live directly on the wheel segments, which removes the separate probability side panel and frees more space for the main play layout.
+- Wheel 10 now uses the near-jackpot theatrical stopping sequence and delayed handoff.
+- Jackpot celebration effects are on the upgraded multi-layer burst pass.
+- The higher-wheel/shop affordances now use clearer pulsing feedback.
 
 ## UX Passthrough
 
-- Add a short first-run tooltip explaining that clicking the background spins and higher wheels unlock when affordable.
-- Add a run-history screen showing recent wins/losses, final coins, key skills, and highest wheel reached.
-- Add confirmation on New Game when a saved run exists.
-- Add keyboard/controller navigation for menu, options, shop, and end-screen grids.
-- Add an explicit "Save" action separate from Save & Exit if longer runs are expected.
-- Add a credits screen from the main menu.
-- Add display of current spin cost changes from skills so players understand why costs shift.
-- Add a clearer "shop available" pulse because the shop button can be missed during fast play.
+- Keyboard/controller navigation now has explicit focus routing for menu, options, shop, and end-screen grids.
 
 ## Asset Notes
 
@@ -144,6 +190,11 @@
 
 - `godot --headless --editor --path . --quit` completed successfully and imported `end-game-jackpot-stage.png` plus `background-music.wav`.
 - `godot --headless --path . --quit` completed successfully with no runtime script errors after skipping music playback in headless mode.
+- `godot --headless --path . --script res://scripts/verify_polish_runtime.gd` completed successfully.
+- `godot --headless --path . --script res://scripts/verify_polish.gd` completed successfully.
+- Runtime verification now also checks keyboard/controller focus routing for main menu, options, shop, and end-screen controls.
+- `env HOME=/tmp godot --headless --editor --path . --quit` completed successfully with `export_presets.cfg` present.
+- `env HOME=/tmp godot --headless --path . --export-release "Linux/X11" /tmp/wheely-lucky.x86_64` and `env HOME=/tmp godot --headless --path . --export-release "Windows Desktop" /tmp/wheely-lucky.exe` both reached preset validation and failed only because export templates are not installed in this environment.
 - `xvfb-run -a godot --path . --script /tmp/wheely_ui_screenshots.gd` rendered visual verification screenshots:
   - `/tmp/wheely-main-menu.png`
   - `/tmp/wheely-how-to-play.png`

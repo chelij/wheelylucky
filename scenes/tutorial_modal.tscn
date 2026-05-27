@@ -198,7 +198,7 @@ theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
 theme_override_font_sizes/font_size = 17
 text = "* Click the wheel area to spin the selected wheel.
 * Each spin pays the result under the pointer after the wheel stops.
-* Plus adds coins, Minus removes coins, Multiply pays from spin cost, Divide cuts coins, and None does nothing."
+* Plus adds coins, Minus removes coins, Multiply pays from spin cost, and None does nothing."
 autowrap_mode = 3
 
 [node name="WheelsShopsPage" type="VBoxContainer" parent="CenterContainer/Panel/VBox/PagePanel/PageStack" unique_id=1754438539]
@@ -263,7 +263,6 @@ theme_override_font_sizes/font_size = 17
 text = "* Plus outcomes add coins.
 * Minus outcomes subtract coins.
 * Multiply outcomes pay a multiplier from spin cost.
-* Divide outcomes reduce current coins.
 * None outcomes have no coin change.
 * Jackpot on Wheel 10 wins the run."
 autowrap_mode = 3

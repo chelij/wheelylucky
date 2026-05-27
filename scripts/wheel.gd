@@ -4,6 +4,7 @@ extends Control
 signal spin_finished(outcome)
 signal spin_started(cost)
 signal shop_requested
+signal near_jackpot_tension(is_jackpot_target)
 
 const WheelConfig = preload("res://scripts/wheel_config.gd")
 const SkillEffects = preload("res://scripts/skill_effects.gd")
@@ -17,11 +18,10 @@ const IDX_VALUE = 2
 const IDX_SLOTS = 3
 const IDX_COLOR = 4
 
-@onready var cycle_label: Label = $CycleLabel
 @onready var wheel_number_label: Label = $WheelNumber
 @onready var cost_label: Label = $CostDisplay
 @onready var coins_label: Label = $CoinsDisplay
-@onready var spin_button: Button = $SpinButton
+
 @onready var prev_wheel_button: Button = $PrevWheelButton
 @onready var next_wheel_button: Button = $NextWheelButton
 @onready var shop_button: Button = $ShopButton
@@ -41,11 +41,15 @@ var base_spin_duration: float = 2.5
 var pointer_default_position: Vector2 = Vector2.ZERO
 var pointer_default_rotation: float = 0.0
 var shop_offer_available: bool = false
+var shop_pulse_time: float = 0.0
 var rng := RandomNumberGenerator.new()
 
 # Cached for consistent drawing during spin
 var cached_outcomes: Array = []
 var cached_slots: Array = []
+var w10_tension_emitted: bool = false
+var w10_tension_active: bool = false
+var spin_locked: bool = false
 
 func _ready():
 	rng.randomize()
@@ -58,7 +62,7 @@ func _ready():
 	Game.coins_changed.connect(_on_coins_changed)
 	Game.selected_wheel_changed.connect(_on_wheel_changed)
 	Game.skills_changed.connect(_on_skills_changed)
-	spin_button.pressed.connect(_on_spin_pressed)
+
 	prev_wheel_button.pressed.connect(_on_prev_wheel_pressed)
 	next_wheel_button.pressed.connect(_on_next_wheel_pressed)
 	shop_button.pressed.connect(_on_shop_button_pressed)
@@ -81,14 +85,20 @@ func _refresh_outcomes():
 		# Randomizer shuffles individual slot positions on the wheel while preserving total odds.
 		cached_slots.shuffle()
 
-func _process(_delta):
+func _process(delta):
 	if is_spinning:
 		var elapsed = Time.get_ticks_msec() / 1000.0 - spin_start_time
 		var duration = get_effective_spin_duration()
 		var progress = min(elapsed / duration, 1.0)
+		if Game.selected_wheel == Game.MAX_WHEELS and progress >= 0.72 and is_pointer_near_jackpot(8):
+			w10_tension_active = true
+			if not w10_tension_emitted:
+				w10_tension_emitted = true
+				var near_outcome = get_pointer_outcome()
+				near_jackpot_tension.emit(near_outcome != null and str(near_outcome[IDX_LABEL]) == "JACKPOT")
 
 		# Fast launch with a longer slow tail, while keeping the same total duration.
-		var eased = 1.0 - pow(1.0 - progress, 7)
+		var eased = _get_spin_eased_progress(progress)
 		current_rotation = spin_start_rotation + target_rotation * eased
 		if "double_spin" in Game.unique_skills:
 			pointer_current_rotation = pointer_start_rotation + pointer_target_rotation * eased
@@ -98,7 +108,6 @@ func _process(_delta):
 
 		if progress >= 1.0:
 			is_spinning = false
-			spin_button.disabled = false
 			current_rotation = fposmod(spin_start_rotation + target_rotation, 360.0)
 			if "double_spin" in Game.unique_skills:
 				pointer_current_rotation = fposmod(pointer_start_rotation + pointer_target_rotation, 360.0)
@@ -107,6 +116,26 @@ func _process(_delta):
 			_update_pointer_indicator()
 			_update_shop_button()
 			spin_finished.emit(get_pointer_outcome())
+	elif shop_offer_available and shop_button.visible:
+		shop_pulse_time += delta
+		var pulse := 1.0 + 0.08 * (0.5 + 0.5 * sin(shop_pulse_time * 4.6))
+		shop_button.scale = Vector2(pulse, pulse)
+		var tint := 0.82 + 0.18 * (0.5 + 0.5 * sin(shop_pulse_time * 5.2))
+		shop_button.modulate = Color(1.0, tint, 0.78, 1.0)
+	else:
+		shop_button.scale = Vector2.ONE
+		shop_button.modulate = Color.WHITE
+
+func _get_spin_eased_progress(progress: float) -> float:
+	var eased := 1.0 - pow(1.0 - progress, 7)
+	if not w10_tension_active:
+		return eased
+	var tension_start := 0.72
+	if progress <= tension_start:
+		return eased
+	var start_eased := 1.0 - pow(1.0 - tension_start, 7)
+	var late_progress: float = clamp((progress - tension_start) / (1.0 - tension_start), 0.0, 1.0)
+	return lerp(start_eased, 1.0, 1.0 - pow(1.0 - late_progress, 2.0))
 
 func get_effective_spin_duration() -> float:
 	if _should_resolve_risk_taker_w1_now():
@@ -140,15 +169,8 @@ func _style_shop_button() -> void:
 	shop_button.visible = false
 	shop_button.disabled = true
 
-func _on_spin_pressed():
-	if is_spinning:
-		return
-	if not Game.can_afford_wheel(Game.selected_wheel):
-		return
-	start_spin()
-
 func _on_prev_wheel_pressed() -> void:
-	if is_spinning:
+	if _is_busy():
 		return
 	for wheel_num in range(Game.selected_wheel - 1, 0, -1):
 		if Game.is_wheel_unlocked(wheel_num):
@@ -156,7 +178,7 @@ func _on_prev_wheel_pressed() -> void:
 			return
 
 func _on_next_wheel_pressed() -> void:
-	if is_spinning:
+	if _is_busy():
 		return
 	for wheel_num in range(Game.selected_wheel + 1, Game.MAX_WHEELS + 1):
 		if Game.is_wheel_unlocked(wheel_num):
@@ -164,7 +186,7 @@ func _on_next_wheel_pressed() -> void:
 			return
 
 func _on_shop_button_pressed() -> void:
-	if is_spinning or not shop_offer_available:
+	if _is_busy() or not shop_offer_available:
 		return
 	shop_requested.emit()
 
@@ -175,23 +197,36 @@ func set_shop_available(is_available: bool) -> void:
 func _update_shop_button() -> void:
 	if shop_button == null:
 		return
-	var should_show = shop_offer_available and not is_spinning
+	var should_show = shop_offer_available and not _is_busy()
 	shop_button.visible = should_show
 	shop_button.disabled = not should_show
+	if not should_show:
+		shop_pulse_time = 0.0
+		shop_button.scale = Vector2.ONE
+		shop_button.modulate = Color.WHITE
+
+func set_all_buttons_visible(is_visible: bool) -> void:
+	prev_wheel_button.visible = is_visible
+	next_wheel_button.visible = is_visible
+	shop_button.visible = is_visible and shop_offer_available
 
 func start_spin():
+	if not can_start_spin():
+		return
 	var payment = Game.begin_spin()
 	if not payment.get("success", false):
 		return
 
 	_refresh_outcomes()
+	w10_tension_emitted = false
+	w10_tension_active = false
 	if _should_resolve_risk_taker_w1_now():
 		spin_started.emit(int(payment.get("cost", 0)))
 		spin_finished.emit(_get_risk_taker_w1_plus_outcome())
 		return
 
 	is_spinning = true
-	spin_button.disabled = true
+	set_all_buttons_visible(false)
 	_update_shop_button()
 	spin_started.emit(int(payment.get("cost", 0)))
 	spin_start_time = Time.get_ticks_msec() / 1000.0
@@ -211,7 +246,7 @@ func start_spin():
 	queue_redraw()
 
 func instant_spin():
-	if is_spinning:
+	if _is_busy():
 		return
 	var payment = Game.begin_spin()
 	if not payment.get("success", false):
@@ -219,6 +254,8 @@ func instant_spin():
 
 	spin_started.emit(int(payment.get("cost", 0)))
 	_refresh_outcomes()
+	w10_tension_emitted = false
+	w10_tension_active = false
 	if _should_resolve_risk_taker_w1_now():
 		spin_finished.emit(_get_risk_taker_w1_plus_outcome())
 		return
@@ -246,7 +283,7 @@ func _apply_fortunes_favor_spin_push() -> void:
 	var outcome = get_pointer_outcome()
 	if outcome == null:
 		return
-	if outcome[IDX_OP] in [WheelConfig.OP_SUBTRACT, WheelConfig.OP_DIVIDE]:
+	if outcome[IDX_OP] == WheelConfig.OP_SUBTRACT:
 		var slot_degrees = 360.0 / float(cached_slots.size())
 		current_rotation += slot_degrees * SkillEffects.FORTUNES_FAVOR_PUSH_SLOTS
 		queue_redraw()
@@ -262,10 +299,8 @@ func get_pointer_outcome():
 
 func _refresh_wheel_hub() -> void:
 	wheel_number_label.text = "◎ " + str(Game.selected_wheel) + " / 10"
-	cycle_label.visible = false
 	var cost = Game.get_wheel_cost(Game.selected_wheel)
 	cost_label.text = "◆ FREE" if cost == 0 else "◆ " + str(cost)
-	spin_button.disabled = not Game.can_afford_wheel(Game.selected_wheel) or is_spinning
 	_update_wheel_arrow_buttons()
 	_update_shop_button()
 	queue_redraw()
@@ -281,21 +316,21 @@ func _on_wheel_changed(_wheel_num: int):
 	queue_redraw()
 
 func _update_wheel_arrow_buttons() -> void:
-	var has_prev = false
+	var has_prev = Game.selected_wheel > 1
 	for wheel_num in range(Game.selected_wheel - 1, 0, -1):
 		if Game.is_wheel_unlocked(wheel_num):
 			has_prev = true
 			break
-	prev_wheel_button.visible = has_prev
-	prev_wheel_button.disabled = is_spinning or not has_prev
+	prev_wheel_button.visible = has_prev and not _is_busy()
+	prev_wheel_button.disabled = false
 
-	var has_next = false
+	var has_next = Game.selected_wheel < Game.MAX_WHEELS
 	for wheel_num in range(Game.selected_wheel + 1, Game.MAX_WHEELS + 1):
 		if Game.is_wheel_unlocked(wheel_num):
 			has_next = true
 			break
-	next_wheel_button.visible = has_next
-	next_wheel_button.disabled = is_spinning or not has_next
+	next_wheel_button.visible = has_next and not _is_busy()
+	next_wheel_button.disabled = false
 
 func _on_skills_changed():
 	_refresh_wheel_hub()
@@ -307,6 +342,16 @@ func _on_skills_changed():
 	_refresh_outcomes()
 	_update_pointer_indicator()
 	queue_redraw()
+
+func set_spin_locked(is_locked: bool) -> void:
+	spin_locked = is_locked
+	_refresh_wheel_hub()
+
+func can_start_spin() -> bool:
+	return not _is_busy() and Game.can_afford_wheel(Game.selected_wheel)
+
+func _is_busy() -> bool:
+	return is_spinning or spin_locked
 
 func _update_pointer_visual() -> void:
 	if pointer_arrow == null:
@@ -345,6 +390,23 @@ func _get_pointer_slot_index() -> int:
 	var pointer_angle = fposmod(_get_pointer_angle_degrees() - current_rotation, 360.0)
 	var slot_degrees = 360.0 / float(cached_slots.size())
 	return int(floor(pointer_angle / slot_degrees)) % cached_slots.size()
+
+func is_pointer_near_jackpot(radius_slots: int = 8) -> bool:
+	if cached_slots.size() == 0:
+		_refresh_outcomes()
+	if cached_slots.size() == 0:
+		return false
+	var jackpot_index := -1
+	for index in range(cached_slots.size()):
+		if str(cached_slots[index][IDX_LABEL]) == "JACKPOT":
+			jackpot_index = index
+			break
+	if jackpot_index == -1:
+		return false
+	var pointer_index := _get_pointer_slot_index()
+	var distance: int = abs(pointer_index - jackpot_index)
+	var wrapped_distance: int = min(distance, cached_slots.size() - distance)
+	return wrapped_distance <= max(1, radius_slots)
 
 func _draw():
 	var wheel_slots = cached_slots
@@ -397,11 +459,9 @@ func _draw():
 	draw_arc(center, outer_radius + 2.0, 0.0, TAU, 160, Color(1.0, 0.95, 0.48), 4.0)
 	_draw_alpha_gradient_arc_shadow(center, outer_radius - 3.0, 18.0, 0.14, 8, 10.0)
 	draw_arc(center, outer_radius, 0.0, TAU, 160, Color(0.45, 0.21, 0.02), 2.2)
+	_draw_segment_labels(center, outer_radius, hub_radius, rotation_rad, slot_angle, wheel_slots)
 	_draw_center_medallion(center, hub_radius)
 	_draw_wheel_progress()
-
-	# Labels are intentionally omitted on the wheel for mobile readability.
-	# Outcome values are shown in the probability panel and floating result feedback instead.
 
 func _draw_center_medallion(center: Vector2, hub_radius: float) -> void:
 	var size_px = hub_radius * 2.55
@@ -436,6 +496,75 @@ func _draw_alpha_gradient_arc_shadow(center: Vector2, base_radius: float, spread
 func _is_pointer_side_edge(angle: float) -> bool:
 	var normalized = fposmod(angle, TAU)
 	return normalized < 0.035 or normalized > TAU - 0.035
+
+func _draw_segment_labels(center: Vector2, outer_radius: float, hub_radius: float, rotation_rad: float, slot_angle: float, wheel_slots: Array) -> void:
+	if wheel_slots.is_empty():
+		return
+	var font := ThemeDB.fallback_font
+	if font == null:
+		return
+	var sections := _build_label_sections(wheel_slots)
+	for section in sections:
+		var start_index := int(section["start"])
+		var slot_count := int(section["count"])
+		var outcome: Array = section["outcome"]
+		var sweep := slot_angle * float(slot_count)
+		var mid_angle := rotation_rad + (float(start_index) + float(slot_count) * 0.5) * slot_angle
+		var radius := hub_radius + (outer_radius - hub_radius) * 0.6
+		var center_pos := center + Vector2(cos(mid_angle), sin(mid_angle)) * radius
+		var tangent := mid_angle + PI * 0.5
+		if cos(mid_angle) < 0.0:
+			tangent += PI
+
+		var value := _segment_label_value(outcome)
+		var value_size: int = clamp(int(round(16.0 + float(slot_count) * 0.24)), 11, 28)
+		if sweep < 0.18:
+			value = _segment_micro_label(outcome)
+			value_size = min(value_size, 10)
+		elif sweep < 0.34:
+			value_size = min(value_size, 13)
+
+		draw_set_transform(center_pos, tangent, Vector2.ONE)
+		_draw_segment_text_line(font, value, value_size, 0.0)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_segment_text_line(font: Font, text: String, font_size: int, y_offset: float) -> void:
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var origin := Vector2(-width * 0.5, y_offset)
+	draw_string(font, origin + Vector2(2.0, 2.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, Color(0.05, 0.015, 0.01, 0.82))
+	draw_string(font, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, Color(1.0, 0.98, 0.9, 0.98))
+
+func _build_label_sections(wheel_slots: Array) -> Array:
+	var sections: Array = []
+	var start_index := 0
+	var current = wheel_slots[0]
+	for index in range(1, wheel_slots.size() + 1):
+		var at_end := index == wheel_slots.size()
+		var next_outcome = null if at_end else wheel_slots[index]
+		if at_end or next_outcome != current:
+			sections.append({
+				"start": start_index,
+				"count": index - start_index,
+				"outcome": current,
+			})
+			if not at_end:
+				start_index = index
+				current = next_outcome
+	return sections
+
+func _segment_label_value(outcome: Array) -> String:
+	var label := str(outcome[IDX_LABEL])
+	if label == "JACKPOT":
+		return "x10"
+	if label == "0":
+		return "0"
+	var prefix := label.substr(0, 1)
+	if prefix in ["+", "-", "x", "/"]:
+		return prefix + UiFormat.compact_number(int(round(label.substr(1).replace(",", "").to_float())))
+	return label
+
+func _segment_micro_label(outcome: Array) -> String:
+	return _segment_label_value(outcome)
 
 func _draw_wheel_progress() -> void:
 	var center = size / 2.0

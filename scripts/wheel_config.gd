@@ -7,15 +7,13 @@ const SkillEffects = preload("res://scripts/skill_effects.gd")
 const OP_ADD = 0
 const OP_SUBTRACT = 1
 const OP_MULTIPLY = 2
-const OP_DIVIDE = 3
-const OP_NONE = 4
+const OP_NONE = 3
 
 # Colors
 const POSITIVE = Color(0.2, 0.8, 0.3)
 const SAFE = Color(0.5, 0.5, 0.5)
 const NEGATIVE = Color(0.8, 0.2, 0.2)
 const MULTIPLY = Color(0.8, 0.7, 0.1)
-const DIVIDE = Color(0.6, 0.3, 0.8)
 const JACKPOT = Color(1.0, 0.85, 0.0)
 
 # Total slots per wheel (each slot = 3 degrees)
@@ -100,8 +98,9 @@ static func _get_wheel_9():
 
 static func _get_wheel_10():
 	return [
-		_mo("-100000", OP_SUBTRACT, 100000.0, 40, NEGATIVE),
+		_mo("-100000", OP_SUBTRACT, 100000.0, 20, NEGATIVE),
 		_mo("JACKPOT", OP_MULTIPLY, 10.0, 1, JACKPOT),
+		_mo("-100000", OP_SUBTRACT, 100000.0, 20, NEGATIVE),
 		_mo("0", OP_NONE, 0.0, 79, SAFE),
 	]
 
@@ -153,7 +152,7 @@ static func calculate_outcome(wheel_num: int, game):
 	var chosen = weighted_random(outcomes)
 
 	# Fortune's Favor: push pointer past Minus outcome
-	if chosen[IDX_OP] in [OP_SUBTRACT, OP_DIVIDE]:
+	if chosen[IDX_OP] == OP_SUBTRACT:
 		if "fortunes_favor" in game.unique_skills:
 			var slot_index = _find_slot_index(chosen, outcomes)
 			var total_slots = _total_slots(outcomes)
@@ -296,13 +295,6 @@ static func apply_display_modifiers(outcomes, game):
 					value = 2.0 * value - 1.0
 				if o[IDX_LABEL] != "JACKPOT":
 					o[IDX_LABEL] = "x" + _format_number(value)
-			OP_DIVIDE:
-				if "banker" in game.unique_skills:
-					o[IDX_LABEL] = "-1"
-				else:
-					var iron = game.skill_levels.get("iron_skin", 0)
-					var value = max(1.0, round(o[IDX_VALUE] * max(0.1, 1.0 - 0.01 * iron)))
-					o[IDX_LABEL] = "/" + _format_number(value)
 	return outcomes
 
 static func _format_number(value: float) -> String:
@@ -344,13 +336,6 @@ static func apply_outcome(outcome, current_coins: int, game) -> int:
 			var spin_cost = game.last_spin_cost
 			var sharp = game.skill_levels.get("sharp_mind", 0)
 			result = current_coins + round(float(spin_cost) * value * (1.0 + 0.025 * sharp))
-		OP_DIVIDE:
-			if "banker" in game.unique_skills:
-				result = float(current_coins - 1)
-			else:
-				var iron = game.skill_levels.get("iron_skin", 0)
-				var iron_mult = max(0.1, 1.0 - 0.01 * iron)
-				result = round(current_coins / max(1.0, round(value * iron_mult)))
 		OP_NONE:
 			result = float(current_coins)
 

@@ -43,7 +43,7 @@ def parse_wheel_config():
 
     op_map = {
         "OP_ADD": "add", "OP_SUBTRACT": "sub",
-        "OP_MULTIPLY": "mul", "OP_DIVIDE": "div",
+        "OP_MULTIPLY": "mul",
         "OP_NONE": "none",
     }
 

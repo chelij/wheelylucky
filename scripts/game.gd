@@ -22,7 +22,10 @@ const IDX_COLOR = 4
 var coins: int = 0:
 	set(value):
 		coins = max(0, value)
-		coins_changed.emit(coins)
+		if suppress_coin_changed:
+			pending_coin_changed_emit = true
+		else:
+			coins_changed.emit(coins)
 
 var selected_wheel: int = 1
 var total_spins: int = 0
@@ -42,6 +45,8 @@ var run_base_payout: int = 0
 var run_skill_payout: int = 0
 var run_highest_wheel: int = 1
 var dev_coin_gain_multiplier: float = 1.0
+var suppress_coin_changed := false
+var pending_coin_changed_emit := false
 
 # Skill state
 var skill_levels: Dictionary = {}
@@ -85,6 +90,8 @@ func reset_run(record_start: bool = false):
 	run_skill_payout = 0
 	run_highest_wheel = 1
 	run_start_time_msec = Time.get_ticks_msec()
+	suppress_coin_changed = false
+	pending_coin_changed_emit = false
 	if record_start:
 		SaveManager.increment_games_started()
 		SaveManager.clear_saved_run()
@@ -98,7 +105,6 @@ func _empty_color_counts() -> Dictionary:
 		"green": 0,
 		"red": 0,
 		"gold": 0,
-		"purple": 0,
 		"grey": 0,
 		"jackpot": 0,
 	}
@@ -153,6 +159,7 @@ func begin_spin() -> Dictionary:
 
 func spin_wheel(pre_chosen_outcome = null):
 	var wheel_num = selected_wheel
+	var coins_before_base := coins
 
 	# Use the pre-determined visual outcome so pointer matches result
 	var outcome
@@ -163,13 +170,13 @@ func spin_wheel(pre_chosen_outcome = null):
 		var calc = WheelConfig.calculate_outcome(wheel_num, self)
 		outcome = calc["outcome"]
 		var delta = calc["delta"]
-		var coin_events := _apply_post_outcome_coin_events(outcome, delta)
+		var coin_events := _build_post_outcome_coin_events(outcome, delta)
 		coins = max(0, coins + delta)
 		if delta > 0:
 			run_coins_earned += delta
 			run_base_payout += delta
 		# Skip normal delta calc since we already applied it
-		return _finish_spin(outcome, delta, coin_events)
+		return _finish_spin(outcome, delta, coin_events, coins_before_base)
 
 	# Apply result — outcome already has skill modifiers baked in from wheel.gd
 	if outcome == null:
@@ -183,10 +190,10 @@ func spin_wheel(pre_chosen_outcome = null):
 		run_coins_earned += delta
 		run_base_payout += delta
 
-	var coin_events := _apply_post_outcome_coin_events(outcome, delta)
-	return _finish_spin(outcome, delta, coin_events)
+	var coin_events := _build_post_outcome_coin_events(outcome, delta)
+	return _finish_spin(outcome, delta, coin_events, coins_before_base)
 
-func _apply_post_outcome_coin_events(outcome, base_delta: int) -> Array[Dictionary]:
+func _build_post_outcome_coin_events(outcome, base_delta: int) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	if outcome == null:
 		return events
@@ -203,14 +210,6 @@ func _apply_post_outcome_coin_events(outcome, base_delta: int) -> Array[Dictiona
 			var amount := int(round(float(base_delta) * SkillEffects.SHARP_MIND_MULTIPLY_VALUE_PER_LEVEL * sharp_level))
 			_add_skill_coin_event(events, "sharp_mind", amount)
 
-	for event in events:
-		var amount := int(event.get("delta", 0))
-		if amount <= 0:
-			continue
-		coins += amount
-		run_coins_earned += amount
-		run_skill_payout += amount
-
 	return events
 
 func _add_skill_coin_event(events: Array[Dictionary], skill_id: String, amount: int) -> void:
@@ -223,21 +222,11 @@ func _add_skill_coin_event(events: Array[Dictionary], skill_id: String, amount: 
 		"delta": amount,
 	})
 
-func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = []) -> Dictionary:
+func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = [], coins_before_base: int = 0) -> Dictionary:
 	var spun_wheel = selected_wheel
-
-	if "second_wind" in unique_skills and coins < last_spin_cost and randf() < SkillEffects.SECOND_WIND_REFUND_CHANCE:
-		coins += last_spin_cost
-		run_coins_earned += last_spin_cost
-		run_skill_payout += last_spin_cost
-		_add_skill_coin_event(coin_events, "second_wind", last_spin_cost)
-
-	if "banker" in unique_skills and coins > 0:
-		var interest := int(round(float(coins) * SkillEffects.BANKER_INTEREST_RATE))
-		coins += interest
-		run_coins_earned += interest
-		run_skill_payout += interest
-		_add_skill_coin_event(coin_events, "banker", interest)
+	suppress_coin_changed = true
+	var ordered_coin_events := _build_ordered_skill_coin_events(outcome, coin_events)
+	_apply_coin_events_to_state(ordered_coin_events)
 
 	# Check game end (only on wheel 10 jackpot)
 	var game_over = false
@@ -248,11 +237,6 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = []) -> D
 			is_jackpot = true
 
 	_update_momentum(outcome)
-	var free_gift_refund := _apply_free_gift(outcome)
-	if free_gift_refund > 0:
-		run_coins_earned += free_gift_refund
-		run_skill_payout += free_gift_refund
-		_add_skill_coin_event(coin_events, "free_gift", free_gift_refund)
 	_roll_shop_after_spin(game_over)
 	_record_spin_color(outcome)
 
@@ -273,8 +257,7 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = []) -> D
 
 	spin_completed.emit()
 
-	if game_over:
-		game_ended.emit(coins, get_elapsed_seconds())
+	var resolution_events := _build_resolution_events(outcome, delta, coins_before_base, ordered_coin_events)
 
 	return {
 		"success": true,
@@ -285,8 +268,104 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = []) -> D
 		"show_shop": shop_available,
 		"game_over": game_over,
 		"is_jackpot": is_jackpot,
-		"coin_events": coin_events,
+		"coin_events": ordered_coin_events,
+		"resolution_events": resolution_events,
 	}
+
+func _build_ordered_skill_coin_events(outcome, base_events: Array[Dictionary]) -> Array[Dictionary]:
+	var sorted_base := _sort_skill_coin_events(base_events)
+	var ordered: Array[Dictionary] = []
+	var pending_by_id := {}
+	for event in sorted_base:
+		pending_by_id[str(event.get("skill_id", ""))] = event.duplicate(true)
+
+	var temp_total := coins
+	var free_gift_refund := _apply_free_gift(outcome)
+	if free_gift_refund > 0:
+		pending_by_id["free_gift"] = _make_skill_coin_event("free_gift", free_gift_refund)
+
+	for skill_id in bought_skill_order:
+		if pending_by_id.has(skill_id):
+			var event := pending_by_id[skill_id] as Dictionary
+			ordered.append(event)
+			temp_total += int(event.get("delta", 0))
+			pending_by_id.erase(skill_id)
+			continue
+		if skill_id == "second_wind" and "second_wind" in unique_skills and temp_total < last_spin_cost and randf() < SkillEffects.SECOND_WIND_REFUND_CHANCE:
+			var second_event := _make_skill_coin_event("second_wind", last_spin_cost)
+			ordered.append(second_event)
+			temp_total += last_spin_cost
+			continue
+		if skill_id == "banker" and "banker" in unique_skills and temp_total > 0:
+			var interest := int(round(float(temp_total) * SkillEffects.BANKER_INTEREST_RATE))
+			var banker_event := _make_skill_coin_event("banker", interest)
+			ordered.append(banker_event)
+			temp_total += interest
+
+	for event in pending_by_id.values():
+		if event is Dictionary:
+			ordered.append((event as Dictionary).duplicate(true))
+	return ordered
+
+func _make_skill_coin_event(skill_id: String, amount: int) -> Dictionary:
+	var skill := SkillManager.get_skill_by_id(skill_id)
+	return {
+		"skill_id": skill_id,
+		"skill_name": skill.get("name", skill_id),
+		"delta": amount,
+	}
+
+func _sort_skill_coin_events(events: Array[Dictionary]) -> Array[Dictionary]:
+	var sorted: Array[Dictionary] = []
+	for event in events:
+		if event is Dictionary:
+			sorted.append(event.duplicate(true))
+	sorted.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _skill_order_index(str(a.get("skill_id", ""))) < _skill_order_index(str(b.get("skill_id", "")))
+	)
+	return sorted
+
+func _skill_order_index(skill_id: String) -> int:
+	var index := bought_skill_order.find(skill_id)
+	return index if index >= 0 else 999999
+
+func _build_resolution_events(outcome, delta: int, coins_before_base: int, coin_events: Array[Dictionary]) -> Array[Dictionary]:
+	var events: Array[Dictionary] = []
+	var display_total := coins_before_base
+	if delta != 0:
+		display_total = max(0, display_total + delta)
+		events.append({
+			"type": "base",
+			"delta": delta,
+			"display_total": display_total,
+			"outcome_label": outcome[IDX_LABEL],
+			"outcome_color": outcome[IDX_COLOR],
+			"spun_wheel": selected_wheel,
+		})
+	for event in coin_events:
+		if not event is Dictionary:
+			continue
+		display_total += int(event.get("delta", 0))
+		event["display_total"] = display_total
+		events.append(event)
+	return events
+
+func _apply_coin_events_to_state(coin_events: Array[Dictionary]) -> void:
+	for event in coin_events:
+		if not event is Dictionary:
+			continue
+		var amount := int(event.get("delta", 0))
+		if amount <= 0:
+			continue
+		coins += amount
+		run_coins_earned += amount
+		run_skill_payout += amount
+
+func flush_coin_changed() -> void:
+	suppress_coin_changed = false
+	if pending_coin_changed_emit:
+		pending_coin_changed_emit = false
+		coins_changed.emit(coins)
 
 func _update_momentum(outcome) -> void:
 	if "momentum" not in unique_skills:
@@ -301,13 +380,12 @@ func _update_momentum(outcome) -> void:
 		momentum_stacks = 0
 
 func _apply_free_gift(outcome) -> int:
-	if outcome[IDX_OP] not in [WheelConfig.OP_NONE, WheelConfig.OP_SUBTRACT, WheelConfig.OP_DIVIDE] or outcome[IDX_LABEL] == "JACKPOT":
+	if outcome[IDX_OP] not in [WheelConfig.OP_NONE, WheelConfig.OP_SUBTRACT] or outcome[IDX_LABEL] == "JACKPOT":
 		return 0
 	var free_gift = skill_levels.get("free_gift", 0)
 	if free_gift <= 0:
 		return 0
 	var refund := int(round(float(last_spin_cost) * SkillEffects.FREE_GIFT_REFUND_PER_LEVEL * free_gift))
-	coins += refund
 	return refund
 
 func _record_spin_color(outcome) -> void:
@@ -325,8 +403,6 @@ func get_color_key_for_outcome(outcome) -> String:
 			return "red"
 		WheelConfig.OP_MULTIPLY:
 			return "gold"
-		WheelConfig.OP_DIVIDE:
-			return "purple"
 		_:
 			return "grey"
 
@@ -443,6 +519,9 @@ func consume_shop_available() -> bool:
 func get_pending_shop_skills() -> Array[Dictionary]:
 	return pending_shop_skills.duplicate()
 
+func set_pending_shop_skill_ids(ids: Array) -> void:
+	pending_shop_skills = _pending_shop_skills_from_ids(ids)
+
 func buy_skill(skill_name: String, cost: int) -> bool:
 	if coins < cost:
 		return false
@@ -469,13 +548,15 @@ func save_current_run() -> void:
 		"selected_wheel": selected_wheel,
 		"total_spins": total_spins,
 		"cycle_count": cycle_count,
+		"shop_available": shop_available,
+		"pending_shop_skill_ids": _pending_shop_skill_ids(),
 		"last_spin_cost": last_spin_cost,
 		"shop_miss_count": shop_miss_count,
 		"momentum_stacks": momentum_stacks,
-		"skill_levels": skill_levels,
-		"unique_skills": unique_skills,
-		"bought_skill_order": bought_skill_order,
-		"run_color_counts": run_color_counts,
+		"skill_levels": skill_levels.duplicate(true),
+		"unique_skills": unique_skills.duplicate(),
+		"bought_skill_order": bought_skill_order.duplicate(),
+		"run_color_counts": run_color_counts.duplicate(true),
 		"run_coins_earned": run_coins_earned,
 		"run_coins_spent": run_coins_spent,
 		"run_spin_costs": run_spin_costs,
@@ -530,8 +611,8 @@ func load_saved_run() -> bool:
 	selected_wheel = int(state.get("selected_wheel", 1))
 	total_spins = int(state.get("total_spins", 0))
 	cycle_count = int(state.get("cycle_count", 1))
-	shop_available = false
-	pending_shop_skills = []
+	shop_available = bool(state.get("shop_available", false))
+	pending_shop_skills = _pending_shop_skills_from_ids(state.get("pending_shop_skill_ids", []))
 	last_spin_cost = int(state.get("last_spin_cost", 0))
 	shop_miss_count = int(state.get("shop_miss_count", 0))
 	momentum_stacks = int(state.get("momentum_stacks", 0))
@@ -551,6 +632,8 @@ func load_saved_run() -> bool:
 	run_highest_wheel = int(state.get("run_highest_wheel", selected_wheel))
 	var elapsed_msec := int(state.get("elapsed_seconds", 0)) * 1000
 	run_start_time_msec = Time.get_ticks_msec() - elapsed_msec
+	suppress_coin_changed = false
+	pending_coin_changed_emit = false
 	wheel_changed.emit(selected_wheel)
 	selected_wheel_changed.emit(selected_wheel)
 	shop_available_changed.emit(shop_available)
@@ -561,4 +644,26 @@ func _to_string_array(value) -> Array[String]:
 	var result: Array[String] = []
 	for item in value:
 		result.append(str(item))
+	return result
+
+func _to_skill_dict_array(value) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in value:
+		if item is Dictionary:
+			result.append(item.duplicate(true))
+	return result
+
+func _pending_shop_skill_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for item in pending_shop_skills:
+		if item is Dictionary:
+			ids.append(str(item.get("id", "")))
+	return ids
+
+func _pending_shop_skills_from_ids(value) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in value:
+		var skill := SkillManager.get_skill_by_id(str(item))
+		if not skill.is_empty():
+			result.append(skill.duplicate(true))
 	return result

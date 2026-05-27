@@ -8,7 +8,6 @@ const UiFormat = preload("res://scripts/ui_format.gd")
 @export var shop_scene: PackedScene
 @export var end_screen_scene: PackedScene
 @export var menu_background_texture: Texture2D
-@export var game_logo_texture: Texture2D
 @export var menu_button_texture: Texture2D
 @export var coin_texture: Texture2D
 @export var skill_icon_atlas: Texture2D
@@ -19,9 +18,7 @@ const UiFormat = preload("res://scripts/ui_format.gd")
 @export var main_menu_scene: PackedScene
 
 @onready var upgrades_vbox: VBoxContainer = $StatsPanel/StatsVBox/UpgradesScroll/UpgradesVBox
-@onready var probability_rows: VBoxContainer = $ProbabilityPanel/ProbabilityVBox/ProbabilityRows
 @onready var wheel_node: Control = $Wheel
-@onready var spin_button: Button = $Wheel/SpinButton
 @onready var coins_display: Label = $Wheel/CoinsDisplay
 @onready var result_positive_sound: AudioStreamPlayer = $ResultPositiveSound
 @onready var result_negative_sound: AudioStreamPlayer = $ResultNegativeSound
@@ -47,6 +44,9 @@ var muted_flashes_enabled: bool = false
 var large_ui_text_enabled: bool = false
 var last_highest_affordable_wheel: int = 1
 var base_font_sizes: Dictionary = {}
+var w10_preview_focus_played: bool = false
+var resolution_events_in_progress: bool = false
+var navigation_focus_enabled: bool = false
 
 const MAX_WHEELS = 10
 const RESOLUTION_OPTIONS := [
@@ -68,6 +68,7 @@ const RESOLUTION_OPTIONS := [
 const SPIN_SPEED_OPTIONS := [0.35, 0.65, 1.0, 1.5, 2.5]
 const COIN_GAIN_OPTIONS := [1.0, 2.0, 5.0, 10.0, 50.0]
 const DEBUG_SHOP_PAGE_SIZE := 4
+const RUN_HISTORY_PAGE_SIZE := 3
 
 func _ready():
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -83,14 +84,14 @@ func _ready():
 
 	wheel_node.spin_finished.connect(_on_spin_finished)
 	wheel_node.spin_started.connect(_on_wheel_spin_started)
+	if wheel_node.has_signal("near_jackpot_tension"):
+		wheel_node.connect("near_jackpot_tension", _on_near_jackpot_tension)
 	wheel_node.shop_requested.connect(_on_shop_button_requested)
 	Game.shop_available_changed.connect(_on_shop_available_changed)
 	Game.game_ended.connect(_on_game_ended)
-	Game.selected_wheel_changed.connect(func(_wheel_num): _update_probability_chart())
 	Game.skills_changed.connect(_on_skills_changed)
 
 	_update_stats()
-	_update_probability_chart()
 	_on_shop_available_changed(Game.shop_available)
 	_set_game_ui_visible(false)
 	_layout_game_ui()
@@ -124,38 +125,60 @@ func _make_non_buttons_click_through(node: Node):
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
+		_set_navigation_focus_enabled(true)
 		if event.unicode == 126:
 			_toggle_dev_tools()
 			get_viewport().set_input_as_handled()
 		elif _is_dev_tools_open() and _handle_dev_tool_key(event.keycode):
 			get_viewport().set_input_as_handled()
+		elif get_viewport().gui_get_focus_owner() == null:
+			_focus_default_control_for_active_surface()
+	elif event is InputEventJoypadButton and event.pressed:
+		_set_navigation_focus_enabled(true)
+		if get_viewport().gui_get_focus_owner() == null:
+			_focus_default_control_for_active_surface()
+	elif event is InputEventJoypadMotion and abs(event.axis_value) > 0.55:
+		_set_navigation_focus_enabled(true)
+		if get_viewport().gui_get_focus_owner() == null:
+			_focus_default_control_for_active_surface()
+	elif event is InputEventMouseMotion:
+		_set_navigation_focus_enabled(false)
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_set_navigation_focus_enabled(false)
 		# A background click spins the wheel, but never steal clicks from active buttons or modal shop UI.
-		if not wheel_node.is_spinning and not _is_modal_open() and not _is_mouse_over_enabled_button(event.position):
+		if wheel_node.has_method("can_start_spin") and bool(wheel_node.call("can_start_spin")) and not _is_modal_open() and not _is_mouse_over_enabled_button(event.position):
 			wheel_node.start_spin()
 			get_viewport().set_input_as_handled()
 
 func _setup_background_music() -> void:
 	if DisplayServer.get_name() == "headless":
+		print("BGM: headless, skipping")
 		return
 	if music_player == null:
+		print("BGM: music_player is null")
 		return
 	if music_player.stream == null:
+		print("BGM: stream is null")
 		return
-	music_player.autoplay = true
+	print("BGM: setting up (stream=", music_player.stream.resource_name, " type=", music_player.stream.get_class(), ")")
+	music_player.autoplay = false
 	music_player.stream_paused = false
-	if music_player.stream is AudioStreamWAV:
-		music_player.stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	if not music_player.finished.is_connected(_restart_background_music):
 		music_player.finished.connect(_restart_background_music)
-	_ensure_background_music_playing()
+	print("BGM: deferring _ensure_background_music_playing")
 	call_deferred("_ensure_background_music_playing")
 
 func _ensure_background_music_playing() -> void:
+	print("BGM: _ensure_background_music_playing called, playing=", music_player.playing, " stream=", music_player.stream)
 	if music_player == null or music_player.stream == null:
+		print("BGM: early exit (null check)")
 		return
 	if not music_player.playing:
+		print("BGM: calling music_player.play()")
 		music_player.play()
+		print("BGM: after play(), playing=", music_player.playing)
+	else:
+		print("BGM: already playing")
 
 func _restart_background_music() -> void:
 	if music_player == null or music_player.stream == null:
@@ -165,7 +188,7 @@ func _restart_background_music() -> void:
 func _apply_saved_settings() -> void:
 	var settings := SaveManager.get_all_settings()
 	_apply_window_settings(str(settings.get("window_mode", "windowed")), str(settings.get("resolution", "1280x720")))
-	_apply_audio_settings(float(settings.get("music_volume", 0.65)), float(settings.get("sfx_volume", 0.8)))
+	_apply_audio_settings(float(settings.get("music_volume", 0.5)), float(settings.get("sfx_volume", 0.5)))
 	_apply_accessibility_settings(settings)
 
 func _apply_accessibility_settings(settings: Dictionary) -> void:
@@ -213,13 +236,14 @@ func _apply_window_settings(window_mode: String, resolution: String) -> void:
 
 func _apply_audio_settings(music_volume: float, sfx_volume: float) -> void:
 	if music_player != null:
+		var was_playing := music_player.playing
 		music_player.volume_db = _volume_to_db(music_volume)
 		var music_muted := music_volume <= 0.001
 		if music_muted:
 			music_player.stop()
-		music_player.stream_paused = music_volume <= 0.001
-		if not music_muted and DisplayServer.get_name() != "headless":
-			_ensure_background_music_playing()
+		music_player.stream_paused = music_muted
+		if not music_muted and was_playing and not music_player.playing:
+			music_player.play()
 	for player in [result_positive_sound, result_negative_sound, multiplier_sound, w10_loss_sound, shop_open_sound, button_hover_sound, button_press_sound]:
 		if player == null:
 			continue
@@ -284,7 +308,6 @@ func _format_elapsed(total_seconds: int) -> String:
 
 func _set_game_ui_visible(is_visible: bool) -> void:
 	wheel_node.visible = is_visible
-	$ProbabilityPanel.visible = is_visible
 	$StatsPanel.visible = is_visible
 	if in_game_options_button != null:
 		in_game_options_button.visible = is_visible
@@ -299,33 +322,11 @@ func _layout_game_ui(viewport_override: Vector2 = Vector2.ZERO) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var margin := 28.0
-	var side_panel_width: float = clamp(viewport_size.x * 0.25, 250.0, 320.0)
-	var side_panel_height: float = clamp(viewport_size.y - 120.0, 300.0, 430.0)
-	var wheel_base_size := Vector2(400, 560)
-	var available_center_width: float = max(320.0, viewport_size.x - (side_panel_width * 2.0) - (margin * 4.0))
-	var wheel_scale: float = min(
-		clamp(available_center_width / wheel_base_size.x, 0.72, 1.18),
-		clamp((viewport_size.y - 96.0) / wheel_base_size.y, 0.72, 1.18)
-	)
-	if viewport_size.x < 940.0:
-		wheel_scale = min(wheel_scale, clamp((viewport_size.x - margin * 2.0) / wheel_base_size.x, 0.62, 1.0))
+	var margin: float = 28.0
+	var stats_visible := wheel_node.visible and viewport_size.x >= 980.0
 
-	wheel_node.scale = Vector2(wheel_scale, wheel_scale)
-	wheel_node.position = Vector2(
-		(viewport_size.x - wheel_base_size.x * wheel_scale) * 0.5,
-		max(72.0, (viewport_size.y - wheel_base_size.y * wheel_scale) * 0.5)
-	)
-
-	var panel_top: float = max(82.0, (viewport_size.y - side_panel_height) * 0.5)
-	var compact_side_panels := viewport_size.x < 1040.0
-	$ProbabilityPanel.visible = wheel_node.visible and not compact_side_panels
-	$StatsPanel.visible = wheel_node.visible and not compact_side_panels
-	if not compact_side_panels:
-		$ProbabilityPanel.position = Vector2(margin, panel_top)
-		$ProbabilityPanel.size = Vector2(side_panel_width, side_panel_height)
-		$StatsPanel.position = Vector2(viewport_size.x - side_panel_width - margin, panel_top)
-		$StatsPanel.size = Vector2(side_panel_width, side_panel_height)
+	# StatsPanel positioning handled entirely by scene anchors/offsets
+	$StatsPanel.visible = stats_visible
 
 	if in_game_options_button != null:
 		in_game_options_button.position = Vector2(max(margin, viewport_size.x - 196.0), 20.0)
@@ -353,9 +354,12 @@ func _show_main_menu() -> void:
 	main_menu_layer.connect("continue_requested", _continue_game)
 	main_menu_layer.connect("stats_requested", _show_stats_window)
 	main_menu_layer.connect("history_requested", _show_run_history_window)
+	main_menu_layer.connect("credits_requested", _show_credits_window)
 	main_menu_layer.connect("options_requested", func(): _show_options_window(false))
 	main_menu_layer.connect("tutorial_requested", _show_how_to_play_window)
 	main_menu_layer.connect("exit_requested", func(): get_tree().quit())
+	if navigation_focus_enabled:
+		_focus_default_control_for_active_surface()
 
 func _make_menu_button(text: String, callback: Callable, primary: bool = false) -> Button:
 	var button := Button.new()
@@ -376,6 +380,16 @@ func _make_menu_button(text: String, callback: Callable, primary: bool = false) 
 	return button
 
 func _start_new_game() -> void:
+	if SaveManager.has_saved_run():
+		_show_confirmation_window(
+			"Start New Game?",
+			"A saved run exists. Starting a new game will replace it.",
+			"Start New Game",
+			func():
+				Game.reset_run(true)
+				_enter_game()
+		)
+		return
 	Game.reset_run(true)
 	_enter_game()
 
@@ -389,7 +403,6 @@ func _enter_game() -> void:
 	main_menu_layer = null
 	_set_game_ui_visible(true)
 	_update_stats()
-	_update_probability_chart()
 	_on_shop_available_changed(Game.shop_available)
 	last_highest_affordable_wheel = Game.get_highest_affordable_wheel()
 
@@ -433,58 +446,147 @@ func _show_stats_window() -> void:
 	vbox.add_child(_make_menu_button("Back", _close_modal))
 
 func _show_run_history_window() -> void:
-	var vbox := _open_modal("Run History", Vector2(780, 600))
+	var vbox := _open_modal("Run History", Vector2(980, 680))
 	var history := SaveManager.get_run_history()
 	if history.is_empty():
 		var empty := Label.new()
 		empty.text = "No completed runs yet"
-		empty.custom_minimum_size = Vector2(640, 320)
+		empty.custom_minimum_size = Vector2(820, 420)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		empty.add_theme_font_size_override("font_size", 24)
+		empty.add_theme_font_size_override("font_size", 28)
 		empty.add_theme_color_override("font_color", Color(0.94, 0.9, 0.78, 1))
 		vbox.add_child(empty)
 	else:
-		var scroll := ScrollContainer.new()
-		scroll.custom_minimum_size = Vector2(700, 430)
-		vbox.add_child(scroll)
+		var page_state := {"index": 0}
+		var subtitle := Label.new()
+		subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		subtitle.add_theme_color_override("font_color", Color(0.9, 0.84, 0.72, 1))
+		subtitle.add_theme_font_size_override("font_size", 18)
+		vbox.add_child(subtitle)
+
+		var content := VBoxContainer.new()
+		content.add_theme_constant_override("separation", 14)
+		content.custom_minimum_size = Vector2(860, 500)
+		vbox.add_child(content)
+
 		var list := VBoxContainer.new()
-		list.add_theme_constant_override("separation", 10)
-		scroll.add_child(list)
-		for entry in history:
-			list.add_child(_make_history_card(entry))
+		list.name = "HistoryPageList"
+		list.add_theme_constant_override("separation", 14)
+		content.add_child(list)
+
+		var nav := HBoxContainer.new()
+		nav.alignment = BoxContainer.ALIGNMENT_CENTER
+		nav.add_theme_constant_override("separation", 16)
+		vbox.add_child(nav)
+
+		var prev_button := _make_menu_button("Prev", func(): pass)
+		prev_button.custom_minimum_size = Vector2(150, 54)
+		var page_label := Label.new()
+		page_label.custom_minimum_size = Vector2(180, 40)
+		page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		page_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		page_label.add_theme_font_size_override("font_size", 20)
+		page_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.72, 1))
+		var next_button := _make_menu_button("Next", func(): pass)
+		next_button.custom_minimum_size = Vector2(150, 54)
+		nav.add_child(prev_button)
+		nav.add_child(page_label)
+		nav.add_child(next_button)
+
+		var render_page := func() -> void:
+			for child in list.get_children():
+				child.queue_free()
+			var page_count := int(ceil(float(history.size()) / float(RUN_HISTORY_PAGE_SIZE)))
+			page_state["index"] = clamp(int(page_state["index"]), 0, max(0, page_count - 1))
+			var start := int(page_state["index"]) * RUN_HISTORY_PAGE_SIZE
+			var end: int = min(start + RUN_HISTORY_PAGE_SIZE, history.size())
+			subtitle.text = "Recent runs in a paged run-summary layout"
+			page_label.text = "Page %d / %d" % [int(page_state["index"]) + 1, max(page_count, 1)]
+			prev_button.disabled = int(page_state["index"]) <= 0
+			next_button.disabled = int(page_state["index"]) >= page_count - 1
+			for entry_index in range(start, end):
+				list.add_child(_make_history_entry_card(history[entry_index], entry_index))
+
+		prev_button.pressed.connect(func():
+			page_state["index"] = int(page_state["index"]) - 1
+			render_page.call()
+		)
+		next_button.pressed.connect(func():
+			page_state["index"] = int(page_state["index"]) + 1
+			render_page.call()
+		)
+		render_page.call()
 	vbox.add_child(_make_menu_button("Back", _close_modal))
 
-func _make_history_card(entry: Dictionary) -> PanelContainer:
+func _make_history_entry_card(entry: Dictionary, entry_index: int) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", _make_panel_style(Color(0.08, 0.025, 0.04, 0.92)))
+	card.add_theme_stylebox_override("panel", _make_panel_style(Color(0.08, 0.025, 0.04, 0.94)))
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 10)
 	card.add_child(box)
 
 	var title := Label.new()
-	title.text = str(entry.get("timestamp", "Recent run")) + "  -  " + UiFormat.compact_number(int(entry.get("final_coins", 0))) + " coins"
-	title.add_theme_font_size_override("font_size", 19)
+	title.text = "Run %02d  |  %s  |  %s coins" % [
+		entry_index + 1,
+		str(entry.get("timestamp", "Recent run")),
+		UiFormat.compact_number(int(entry.get("final_coins", 0))),
+	]
+	title.add_theme_font_size_override("font_size", 23)
 	title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.24, 1))
 	box.add_child(title)
 
-	var detail := Label.new()
-	detail.text = "Wheel " + str(int(entry.get("highest_wheel", 1))) + " reached | " + str(int(entry.get("spins", 0))) + " spins | " + _format_elapsed(int(entry.get("elapsed_seconds", 0))) + " | " + str(int(entry.get("skills_bought", 0))) + " skills"
-	detail.add_theme_color_override("font_color", Color(0.94, 0.9, 0.78, 1))
-	box.add_child(detail)
+	var metrics := HBoxContainer.new()
+	metrics.add_theme_constant_override("separation", 10)
+	box.add_child(metrics)
+	metrics.add_child(_make_history_metric_card("Wheel", "Wheel " + str(int(entry.get("highest_wheel", 1))) + " reached"))
+	metrics.add_child(_make_history_metric_card("Spins", str(int(entry.get("spins", 0)))))
+	metrics.add_child(_make_history_metric_card("Time", _format_elapsed(int(entry.get("elapsed_seconds", 0)))))
+	metrics.add_child(_make_history_metric_card("Skills", str(int(entry.get("skills_bought", 0)))))
 
 	var breakdown := Label.new()
-	breakdown.text = "Payouts: base " + UiFormat.compact_number(int(entry.get("base_payout", 0))) + ", skills " + UiFormat.compact_number(int(entry.get("skill_payout", 0))) + " | Spent: spins " + UiFormat.compact_number(int(entry.get("spin_costs", 0))) + ", shop " + UiFormat.compact_number(int(entry.get("shop_spent", 0)))
+	breakdown.text = "Payouts: base " + UiFormat.compact_number(int(entry.get("base_payout", 0))) + ", skills " + UiFormat.compact_number(int(entry.get("skill_payout", 0))) + "   |   Spent: spins " + UiFormat.compact_number(int(entry.get("spin_costs", 0))) + ", shop " + UiFormat.compact_number(int(entry.get("shop_spent", 0)))
 	breakdown.add_theme_color_override("font_color", Color(0.86, 0.8, 0.66, 1))
+	breakdown.add_theme_font_size_override("font_size", 17)
 	box.add_child(breakdown)
 
 	var skills := _format_history_skills(entry.get("skills", []))
-	if not skills.is_empty():
-		var skill_label := Label.new()
-		skill_label.text = skills
-		skill_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		skill_label.add_theme_color_override("font_color", Color(0.78, 0.92, 0.72, 1))
-		box.add_child(skill_label)
+	var skill_label := Label.new()
+	skill_label.text = skills if not skills.is_empty() else "No purchased skills recorded"
+	skill_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skill_label.add_theme_color_override("font_color", Color(0.78, 0.92, 0.72, 1) if not skills.is_empty() else Color(0.86, 0.82, 0.72, 0.8))
+	box.add_child(skill_label)
+	return card
+
+func _make_history_metric_card(label_text: String, value_text: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.14, 0.045, 0.035, 0.88)
+	style.border_color = Color(0.94, 0.68, 0.18, 0.85)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(7)
+	style.content_margin_left = 12
+	style.content_margin_top = 10
+	style.content_margin_right = 12
+	style.content_margin_bottom = 10
+	card.add_theme_stylebox_override("panel", style)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	card.add_child(box)
+
+	var label := Label.new()
+	label.text = label_text
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", Color(0.92, 0.82, 0.62, 0.92))
+	box.add_child(label)
+
+	var value := Label.new()
+	value.text = value_text
+	value.add_theme_font_size_override("font_size", 18)
+	value.add_theme_color_override("font_color", Color(1.0, 0.94, 0.8, 1))
+	box.add_child(value)
 	return card
 
 func _format_history_skills(skills_value) -> String:
@@ -522,10 +624,27 @@ func _show_options_window(in_game: bool) -> void:
 			SaveManager.set_setting(key, value)
 			_apply_saved_settings()
 		)
+	if modal_layer.has_signal("save_requested"):
+		modal_layer.connect("save_requested", _save_run_and_close_options)
 	if modal_layer.has_signal("save_exit_requested"):
-		modal_layer.connect("save_exit_requested", _save_exit_to_main_menu)
+		modal_layer.connect("save_exit_requested", _confirm_save_exit_to_main_menu)
 	if modal_layer.has_signal("close_requested"):
 		modal_layer.connect("close_requested", _close_modal)
+	if navigation_focus_enabled:
+		_focus_default_control_for_active_surface()
+
+func _save_run_and_close_options() -> void:
+	Game.save_current_run()
+	_close_modal()
+	_show_toast("Run saved")
+
+func _confirm_save_exit_to_main_menu() -> void:
+	_show_confirmation_window(
+		"Save & Exit?",
+		"Save the current run and return to the main menu.",
+		"Save & Exit",
+		_save_exit_to_main_menu
+	)
 
 func _save_exit_to_main_menu() -> void:
 	Game.save_current_run()
@@ -539,6 +658,40 @@ func _save_exit_to_main_menu() -> void:
 	_close_modal()
 	_show_main_menu()
 
+func _show_credits_window() -> void:
+	var vbox := _open_modal("Credits", Vector2(860, 620))
+	var intro := Label.new()
+	intro.text = "Wheely Lucky ships CC0 assets. Source links are recorded in assets/sounds/SOURCES.md."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.custom_minimum_size = Vector2(760, 56)
+	intro.add_theme_font_size_override("font_size", 18)
+	intro.add_theme_color_override("font_color", Color(0.94, 0.9, 0.78, 1))
+	vbox.add_child(intro)
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = false
+	text.fit_content = false
+	text.scroll_active = true
+	text.custom_minimum_size = Vector2(760, 430)
+	text.text = "\n".join([
+		"Background music",
+		"Jazz n' brass loop by Emma_MA (CC0)",
+		"",
+		"Sound effects",
+		"Level up, power up, Coin get (13 Sounds) by wobbleboxx (CC0)",
+		"54 Casino sound effects by Kenney (CC0)",
+		"Classic fanfare lick by fvcalderan (CC0)",
+		"Button click sound effect by qubodup (CC0)",
+		"Project-generated hover/press tones dedicated to the public domain",
+		"",
+		"Art",
+		"End-game background generated for this project",
+		"Game logo and UI assembly are project assets in this repo",
+	])
+	text.add_theme_font_size_override("normal_font_size", 20)
+	text.add_theme_color_override("default_color", Color(0.94, 0.9, 0.78, 1))
+	vbox.add_child(text)
+	vbox.add_child(_make_menu_button("Back", _close_modal))
+
 func _show_how_to_play_window() -> void:
 	_close_modal()
 	if tutorial_modal_scene == null:
@@ -549,6 +702,8 @@ func _show_how_to_play_window() -> void:
 	_apply_large_ui_text(modal_layer)
 	if modal_layer.has_signal("close_requested"):
 		modal_layer.connect("close_requested", _close_modal)
+	if navigation_focus_enabled:
+		_focus_default_control_for_active_surface()
 
 func _open_modal(title_text: String, size: Vector2) -> VBoxContainer:
 	_close_modal()
@@ -582,10 +737,54 @@ func _open_modal(title_text: String, size: Vector2) -> VBoxContainer:
 	vbox.add_child(title)
 	return vbox
 
+func _show_confirmation_window(title_text: String, body_text: String, confirm_text: String, on_confirm: Callable) -> void:
+	var vbox := _open_modal(title_text, Vector2(660, 360))
+	var body := Label.new()
+	body.text = body_text
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(560, 120)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	body.add_theme_font_size_override("font_size", 22)
+	body.add_theme_color_override("font_color", Color(0.94, 0.9, 0.78, 1))
+	vbox.add_child(body)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 14)
+	vbox.add_child(buttons)
+	buttons.add_child(_make_menu_button("Cancel", _close_modal))
+	buttons.add_child(_make_menu_button(confirm_text, func():
+		_close_modal()
+		on_confirm.call()
+	, true))
+
+func _show_toast(message: String) -> void:
+	var label := Label.new()
+	label.text = message
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.78, 1))
+	label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.95))
+	label.add_theme_constant_override("shadow_offset_x", 2)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.custom_minimum_size = Vector2(220, 40)
+	label.global_position = Vector2((get_viewport_rect().size.x - 220.0) * 0.5, 86.0)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(label)
+	var tween := create_tween()
+	tween.tween_property(label, "global_position:y", label.global_position.y - 22.0, 0.8)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(label.queue_free)
+
 func _close_modal() -> void:
 	if modal_layer != null and is_instance_valid(modal_layer):
 		modal_layer.queue_free()
 	modal_layer = null
+	if navigation_focus_enabled:
+		call_deferred("_focus_default_control_for_active_surface")
+	else:
+		_clear_focus_if_navigation_disabled()
 
 func _make_panel_style(color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -657,8 +856,6 @@ func _color_label(color_key: String) -> String:
 			return "Minus"
 		"gold":
 			return "Multiply"
-		"purple":
-			return "Divide"
 		"grey":
 			return "None"
 		"jackpot":
@@ -918,39 +1115,49 @@ func _on_spin_finished(outcome):
 	# Wheel animation chooses the visual outcome; Game applies it so result and pointer stay in sync.
 	var result = Game.spin_wheel(outcome)
 	_update_stats()
-	_update_probability_chart()
 	_on_shop_available_changed(Game.shop_available)
 	
 	if result.get("success", false):
-		_play_result_polish(result)
-		_show_coin_delta(
-			result.get("delta", 0),
-			result.get("outcome_color", Color.WHITE),
-			result.get("outcome_label", ""),
-			result.get("spun_wheel", 0)
-		)
-		await _play_skill_coin_events(result.get("coin_events", []))
+		await _play_result_polish(result)
+		resolution_events_in_progress = true
+		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
+			wheel_node.call("set_spin_locked", true)
+		await _play_resolution_events(result.get("resolution_events", []))
+		Game.flush_coin_changed()
+		resolution_events_in_progress = false
+		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
+			wheel_node.call("set_spin_locked", false)
 		var highest := Game.get_highest_affordable_wheel()
 		if highest > last_highest_affordable_wheel:
-			_pulse_wheel_indicator()
+			_pulse_wheel_indicator(highest)
 		last_highest_affordable_wheel = highest
+		wheel_node.set_all_buttons_visible(true)
+		if bool(result.get("game_over", false)):
+			await get_tree().create_timer(0.6 if not reduced_motion_enabled else 0.18).timeout
+			_on_game_ended(Game.coins, Game.get_elapsed_seconds())
+	else:
+		wheel_node.set_all_buttons_visible(true)
 
 func _play_result_polish(result: Dictionary) -> void:
 	var outcome_label := str(result.get("outcome_label", ""))
 	var spun_wheel := int(result.get("spun_wheel", 0))
 	var color: Color = result.get("outcome_color", Color.WHITE)
+	var near_jackpot := spun_wheel == Game.MAX_WHEELS and wheel_node.has_method("is_pointer_near_jackpot") and bool(wheel_node.call("is_pointer_near_jackpot", 8))
 	if outcome_label == "JACKPOT":
-		_spawn_particle_burst(_get_wheel_effect_position(), Color(1.0, 0.82, 0.24, 1), 34)
+		_spawn_jackpot_celebration(_get_wheel_effect_position())
+		if near_jackpot:
+			await _play_w10_loss_focus(true)
 	elif outcome_label.begins_with("x"):
-		_spawn_particle_burst(_get_wheel_effect_position(), color.lightened(0.25), 18)
-	if spun_wheel == Game.MAX_WHEELS and outcome_label != "JACKPOT":
-		_play_w10_loss_focus()
+		_spawn_multiplier_celebration(_get_wheel_effect_position(), color.lightened(0.25))
+	if spun_wheel == Game.MAX_WHEELS and outcome_label != "JACKPOT" and near_jackpot:
+		if not w10_preview_focus_played:
+			await _play_w10_loss_focus(false)
 
 func _get_wheel_effect_position() -> Vector2:
 	var pointer := wheel_node.get_node_or_null("PointerArrow/PointerIndicator") as Control
 	if pointer != null:
 		return pointer.global_position + pointer.size * 0.5
-	return wheel_node.global_position + wheel_node.size * wheel_node.scale * 0.5
+	return wheel_node.global_position + wheel_node.size * 0.5
 
 func _spawn_particle_burst(origin: Vector2, color: Color, count: int) -> void:
 	if reduced_motion_enabled:
@@ -976,7 +1183,40 @@ func _spawn_particle_burst(origin: Vector2, color: Color, count: int) -> void:
 		tween.tween_property(particle, "modulate:a", 0.0, 0.6)
 		tween.chain().tween_callback(particle.queue_free)
 
-func _play_w10_loss_focus() -> void:
+func _spawn_flash_ring(origin: Vector2, color: Color, radius: float, thickness: float, lifetime: float) -> void:
+	if reduced_motion_enabled:
+		return
+	var ring := PanelContainer.new()
+	ring.size = Vector2(radius, radius)
+	ring.pivot_offset = ring.size * 0.5
+	ring.global_position = origin - ring.size * 0.5
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ring)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	style.border_color = Color(color.r, color.g, color.b, 0.95)
+	style.set_border_width_all(int(max(2.0, thickness)))
+	style.set_corner_radius_all(int(radius * 0.5))
+	ring.add_theme_stylebox_override("panel", style)
+	ring.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", Vector2(1.32, 1.32), lifetime).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ring, "modulate:a", 0.0, lifetime)
+	tween.tween_callback(ring.queue_free)
+
+func _spawn_jackpot_celebration(origin: Vector2) -> void:
+	_spawn_flash_ring(origin, Color(1.0, 0.84, 0.22, 1), 66.0, 5.0, 0.78)
+	_spawn_flash_ring(origin, Color(1.0, 0.45, 0.12, 1), 102.0, 3.0, 0.92)
+	_spawn_particle_burst(origin, Color(1.0, 0.82, 0.24, 1), 44)
+	_spawn_particle_burst(origin, Color(1.0, 0.56, 0.16, 1), 26)
+	_spawn_particle_burst(origin, Color(1.0, 0.96, 0.72, 1), 18)
+
+func _spawn_multiplier_celebration(origin: Vector2, color: Color) -> void:
+	_spawn_flash_ring(origin, color, 54.0, 3.0, 0.5)
+	_spawn_particle_burst(origin, color, 24)
+
+func _play_w10_loss_focus(is_jackpot: bool = false) -> void:
 	if reduced_motion_enabled:
 		return
 	var original_position := wheel_node.position
@@ -984,42 +1224,64 @@ func _play_w10_loss_focus() -> void:
 	var pointer_global := _get_wheel_effect_position()
 	var original_canvas_transform := get_viewport().canvas_transform
 	var tween := create_tween()
-	tween.tween_method(func(value: float): _set_viewport_focus_zoom(value, pointer_global), 0.0, 1.0, 0.10)
-	tween.parallel().tween_property(wheel_node, "scale", original_scale * 1.015, 0.08)
-	for i in range(6):
-		var offset := Vector2(6.0 if i % 2 == 0 else -6.0, -3.0 if i % 3 == 0 else 3.0)
-		tween.tween_property(wheel_node, "position", original_position + offset, 0.035)
-	tween.tween_method(func(value: float): _set_viewport_focus_zoom(1.0 - value, pointer_global), 0.0, 1.0, 0.12)
-	tween.tween_property(wheel_node, "position", original_position, 0.12)
-	tween.parallel().tween_property(wheel_node, "scale", original_scale, 0.12)
+	var focus_zoom := 1.1 if is_jackpot else 1.075
+	var intro_time := 0.22 if is_jackpot else 0.16
+	var settle_time := 0.34 if is_jackpot else 0.26
+	var shake_distance := 12.0 if is_jackpot else 8.0
+	tween.tween_method(func(value: float): _set_viewport_focus_zoom_custom(value, pointer_global, focus_zoom), 0.0, 1.0, intro_time)
+	tween.parallel().tween_property(wheel_node, "scale", original_scale * (1.05 if is_jackpot else 1.03), intro_time).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	for i in range(8 if is_jackpot else 6):
+		var offset := Vector2(shake_distance if i % 2 == 0 else -shake_distance, -shake_distance * 0.45 if i % 3 == 0 else shake_distance * 0.35)
+		tween.tween_property(wheel_node, "position", original_position + offset, 0.045 if is_jackpot else 0.038)
+	tween.tween_method(func(value: float): _set_viewport_focus_zoom_custom(1.0 - value, pointer_global, focus_zoom), 0.0, 1.0, settle_time)
+	tween.tween_property(wheel_node, "position", original_position, settle_time)
+	tween.parallel().tween_property(wheel_node, "scale", original_scale, settle_time)
 	tween.tween_callback(func(): get_viewport().canvas_transform = original_canvas_transform)
+	await tween.finished
 
 func _set_viewport_focus_zoom(amount: float, focus: Vector2) -> void:
-	var zoom: float = lerp(1.0, 1.045, clamp(amount, 0.0, 1.0))
+	_set_viewport_focus_zoom_custom(amount, focus, 1.045)
+
+func _set_viewport_focus_zoom_custom(amount: float, focus: Vector2, max_zoom: float) -> void:
+	var zoom: float = lerp(1.0, max_zoom, clamp(amount, 0.0, 1.0))
 	var origin: Vector2 = focus - focus * zoom
 	get_viewport().canvas_transform = Transform2D(Vector2(zoom, 0.0), Vector2(0.0, zoom), origin)
 
-func _pulse_wheel_indicator() -> void:
+func _get_next_wheel_arc_focus(target_wheel: int) -> Vector2:
+	var scale_factor: float = wheel_node.size.y / 560.0
+	var center := wheel_node.global_position + wheel_node.size * 0.5
+	var radius := 278.0 * scale_factor
+	var ratio: float = clamp(float(target_wheel - 1) / float(Game.MAX_WHEELS - 1), 0.0, 1.0)
+	var angle: float = lerp(deg_to_rad(210.0), deg_to_rad(330.0), ratio)
+	return center + Vector2(cos(angle), sin(angle)) * radius
+
+func _pulse_wheel_indicator(target_wheel: int = 0) -> void:
 	var indicator := wheel_node.get_node_or_null("PointerArrow/PointerIndicator") as Control
+	var focus_point := _get_next_wheel_arc_focus(target_wheel if target_wheel > 0 else min(Game.MAX_WHEELS, last_highest_affordable_wheel + 1))
 	if indicator == null:
 		return
 	if not reduced_motion_enabled:
-		var original_scale := indicator.scale
-		var tween := create_tween()
-		tween.tween_property(indicator, "scale", original_scale * 1.35, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tween.tween_property(indicator, "scale", original_scale, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_spawn_indicator_sparkles(indicator)
+		var ring_tint := Color(1.0, 0.92, 0.36, 1)
+		_spawn_flash_ring(focus_point, ring_tint, 56.0, 4.0, 0.62)
+		_spawn_flash_ring(focus_point, Color(1.0, 0.62, 0.22, 1), 84.0, 2.0, 0.84)
+	_spawn_indicator_sparkles(focus_point)
 
-func _spawn_indicator_sparkles(indicator: Control) -> void:
+func _spawn_indicator_sparkles(origin: Vector2) -> void:
 	if reduced_motion_enabled:
 		return
-	var origin := indicator.global_position + indicator.size * 0.5
-	_spawn_particle_burst(origin, Color(1.0, 0.92, 0.36, 1), 10)
+	_spawn_particle_burst(origin, Color(1.0, 0.92, 0.36, 1), 16)
 
 func _on_wheel_spin_started(cost: int = 0):
+	w10_preview_focus_played = false
 	_on_shop_available_changed(Game.shop_available)
 	if cost > 0:
 		_show_coin_delta(-cost, Color(1.0, 0.62, 0.24, 1), "", 0, false)
+
+func _on_near_jackpot_tension(is_jackpot_target: bool) -> void:
+	if w10_preview_focus_played:
+		return
+	w10_preview_focus_played = true
+	_play_w10_loss_focus(is_jackpot_target)
 
 func _show_coin_delta(delta: int, color: Color, outcome_label: String = "", spun_wheel: int = 0, play_sound: bool = true):
 	# Lightweight floating label for spin rewards, spin costs, and shop purchases.
@@ -1045,8 +1307,9 @@ func _show_coin_delta(delta: int, color: Color, outcome_label: String = "", spun
 	label.add_theme_constant_override("shadow_offset_x", 2)
 	label.add_theme_constant_override("shadow_offset_y", 2)
 	label.add_theme_font_size_override("font_size", 28)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.global_position = coins_display.global_position + Vector2(40, -32)
+	label.global_position = wheel_node.global_position + coins_display.position + Vector2(40, -32)
 	label.size = Vector2(120, 38)
 	add_child(label)
 
@@ -1055,25 +1318,45 @@ func _show_coin_delta(delta: int, color: Color, outcome_label: String = "", spun
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.65)
 	tween.tween_callback(label.queue_free)
 
-func _play_skill_coin_events(events: Array) -> void:
+func _play_resolution_events(events: Array) -> void:
 	for event in events:
 		if not event is Dictionary:
 			continue
 		var delta := int(event.get("delta", 0))
-		if delta <= 0:
+		if delta == 0:
 			continue
-		await _show_skill_coin_delta(str(event.get("skill_id", "")), delta, str(event.get("skill_name", "")))
-		await get_tree().create_timer(0.10).timeout
+		if str(event.get("type", "")) == "base":
+			_show_coin_delta(
+				delta,
+				event.get("outcome_color", Color.WHITE),
+				str(event.get("outcome_label", "")),
+				int(event.get("spun_wheel", 0))
+			)
+			_set_displayed_coin_total(int(event.get("display_total", Game.coins)))
+			await get_tree().create_timer(0.62).timeout
+			continue
+		await _show_skill_coin_delta(
+			str(event.get("skill_id", "")),
+			delta,
+			str(event.get("skill_name", "")),
+			int(event.get("display_total", Game.coins))
+		)
+		await get_tree().create_timer(0.24).timeout
 
-func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String) -> void:
+func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String, display_total: int) -> void:
 	var frame = skill_icon_frames.get(skill_id)
 	if frame == null or not is_instance_valid(frame):
 		_show_coin_delta(delta, Color(1.0, 0.84, 0.24, 1), "", 0)
-		await get_tree().create_timer(0.42).timeout
+		_set_displayed_coin_total(display_total)
+		await get_tree().create_timer(0.52).timeout
 		return
 
 	result_positive_sound.play()
-	var start_position := (frame as Control).global_position + Vector2(4, -28)
+	$StatsPanel.visible = true
+	await get_tree().process_frame
+	var frame_node = frame as Control
+	var icon: Vector2 = (frame_node.get_child(0) as TextureRect).global_position if frame_node.get_child_count() > 0 else frame_node.global_position
+	var start_position: Vector2 = icon + Vector2(-23, 23) + Vector2(0, -44)
 
 	var label = Label.new()
 	label.text = UiFormat.signed_compact(delta)
@@ -1083,7 +1366,7 @@ func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String) -
 	label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.95))
 	label.add_theme_constant_override("shadow_offset_x", 2)
 	label.add_theme_constant_override("shadow_offset_y", 2)
-	label.add_theme_font_size_override("font_size", 21)
+	label.add_theme_font_size_override("font_size", 28)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.global_position = start_position
 	label.size = Vector2(92, 30)
@@ -1104,6 +1387,7 @@ func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String) -
 	tween.tween_property(glow, "color:a", 0.42, 0.10)
 	tween.tween_property(label, "global_position:y", start_position.y - 34.0, 0.48)
 	tween.tween_property(label, "modulate:a", 0.0, 0.48).set_delay(0.12)
+	tween.parallel().tween_method(func(value: float): _set_displayed_coin_total(int(round(value))), float(max(display_total - delta, 0)), float(display_total), 0.40)
 	tween.chain().tween_property(frame, "scale", original_scale, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(glow, "color:a", 0.0, 0.16)
 	tween.tween_callback(func():
@@ -1114,6 +1398,10 @@ func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String) -
 	)
 	await tween.finished
 
+func _set_displayed_coin_total(total: int) -> void:
+	if coins_display != null:
+		coins_display.text = UiFormat.compact_number(total)
+
 func _on_shop_requested():
 	# Shop is instanced only when offered so it does not sit in the tree during normal spins.
 	shop_open_sound.play()
@@ -1122,6 +1410,8 @@ func _on_shop_requested():
 		return
 	var shop = shop_scene.instantiate()
 	add_child(shop)
+	if navigation_focus_enabled and shop.has_method("focus_default_control"):
+		shop.call_deferred("focus_default_control")
 
 	shop.purchase_completed.connect(func(cost):
 		_show_coin_delta(-cost, Color(1.0, 0.62, 0.24, 1), "", 0, false)
@@ -1150,6 +1440,8 @@ func _on_game_ended(_final_coins: int, _elapsed_seconds: int):
 	var end_screen = end_screen_scene.instantiate()
 	add_child(end_screen)
 	_apply_large_ui_text(end_screen)
+	if navigation_focus_enabled and end_screen.has_method("focus_default_control"):
+		end_screen.call_deferred("focus_default_control")
 	if in_game_options_button != null:
 		in_game_options_button.visible = false
 	if in_game_help_button != null:
@@ -1167,7 +1459,6 @@ func _update_stats():
 
 func _on_skills_changed():
 	_update_stats()
-	_update_probability_chart()
 
 func _update_upgrades_summary():
 	# Rebuild is cheap here because upgrades only change after shop purchases.
@@ -1199,6 +1490,40 @@ func _update_upgrades_summary():
 	for item in owned:
 		grid.add_child(_make_upgrade_icon(item["id"], item["level"], item["name"]))
 
+func _set_navigation_focus_enabled(is_enabled: bool) -> void:
+	if navigation_focus_enabled == is_enabled:
+		if navigation_focus_enabled and get_viewport().gui_get_focus_owner() == null:
+			_focus_default_control_for_active_surface()
+		return
+	navigation_focus_enabled = is_enabled
+	if navigation_focus_enabled:
+		if get_viewport().gui_get_focus_owner() == null:
+			_focus_default_control_for_active_surface()
+	else:
+		_clear_focus_if_navigation_disabled()
+
+func _clear_focus_if_navigation_disabled() -> void:
+	if navigation_focus_enabled:
+		return
+	var owner := get_viewport().gui_get_focus_owner()
+	if owner != null and owner is Control:
+		(owner as Control).release_focus()
+
+func _focus_default_control_for_active_surface() -> void:
+	if modal_layer != null and is_instance_valid(modal_layer) and modal_layer.has_method("focus_default_control"):
+		modal_layer.call("focus_default_control")
+		return
+	for child in get_children():
+		if child.name == "Shop" and child.has_method("focus_default_control"):
+			child.call("focus_default_control")
+			return
+	for child in get_children():
+		if child.name == "EndScreen" and child.has_method("focus_default_control"):
+			child.call("focus_default_control")
+			return
+	if main_menu_layer != null and is_instance_valid(main_menu_layer) and main_menu_layer.has_method("focus_default_control"):
+		main_menu_layer.call("focus_default_control")
+
 func _get_owned_skill_icons() -> Array[Dictionary]:
 	var items: Array[Dictionary] = []
 	for skill_id in Game.bought_skill_order:
@@ -1215,6 +1540,7 @@ func _make_upgrade_icon(skill_id: String, level: int, _skill_name: String) -> Co
 	frame.name = "SkillIcon_" + skill_id
 	frame.set_meta("skill_id", skill_id)
 	frame.custom_minimum_size = Vector2(58, 58)
+	frame.pivot_offset = frame.custom_minimum_size / 2.0
 	skill_icon_frames[skill_id] = frame
 
 	var icon = TextureRect.new()
@@ -1252,91 +1578,3 @@ func _make_level_badge_style() -> StyleBoxFlat:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(11)
 	return style
-
-func _update_probability_chart():
-	# Probability rows reflect current wheel plus active skill modifiers.
-	for child in probability_rows.get_children():
-		probability_rows.remove_child(child)
-		child.free()
-
-	var outcomes = WheelConfig.get_outcomes(Game.selected_wheel)
-	outcomes = WheelConfig.apply_skill_modifiers(outcomes, Game, Game.selected_wheel)
-	outcomes = WheelConfig.apply_display_modifiers(outcomes, Game)
-	outcomes = _merge_probability_outcomes(outcomes)
-
-	for outcome in outcomes:
-		var row = HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 30)
-		row.add_theme_constant_override("separation", 6)
-
-		var swatch = ColorRect.new()
-		swatch.custom_minimum_size = Vector2(20, 20)
-		swatch.color = outcome[WheelConfig.IDX_COLOR].lightened(0.12)
-		row.add_child(swatch)
-
-		var label = Label.new()
-		label.text = _format_probability_label(outcome)
-		label.custom_minimum_size = Vector2(76, 0)
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.92, 1))
-		label.add_theme_font_size_override("font_size", 16)
-		row.add_child(label)
-
-		var slots = Label.new()
-		slots.text = str(int(outcome[WheelConfig.IDX_SLOTS])) + "/" + str(WheelConfig.TOTAL_SLOTS)
-		slots.custom_minimum_size = Vector2(66, 0)
-		slots.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		slots.add_theme_color_override("font_color", Color(1.0, 0.86, 0.38, 1))
-		slots.add_theme_font_size_override("font_size", 16)
-		row.add_child(slots)
-
-		probability_rows.add_child(row)
-
-func _merge_probability_outcomes(outcomes: Array) -> Array:
-	var merged: Array = []
-	for outcome in outcomes:
-		var existing = null
-		for candidate in merged:
-			if _is_same_probability_row(candidate, outcome):
-				existing = candidate
-				break
-		if existing == null:
-			merged.append([
-				outcome[WheelConfig.IDX_LABEL],
-				outcome[WheelConfig.IDX_OP],
-				outcome[WheelConfig.IDX_VALUE],
-				outcome[WheelConfig.IDX_SLOTS],
-				outcome[WheelConfig.IDX_COLOR],
-			])
-		else:
-			existing[WheelConfig.IDX_SLOTS] += outcome[WheelConfig.IDX_SLOTS]
-	return merged
-
-func _is_same_probability_row(a: Array, b: Array) -> bool:
-	return (
-		a[WheelConfig.IDX_LABEL] == b[WheelConfig.IDX_LABEL]
-		and a[WheelConfig.IDX_OP] == b[WheelConfig.IDX_OP]
-		and is_equal_approx(float(a[WheelConfig.IDX_VALUE]), float(b[WheelConfig.IDX_VALUE]))
-	)
-
-func _format_probability_label(outcome: Array) -> String:
-	var label = str(outcome[WheelConfig.IDX_LABEL])
-	if label == "JACKPOT":
-		return "JACKPOT"
-	match int(outcome[WheelConfig.IDX_OP]):
-		WheelConfig.OP_ADD:
-			return "Plus " + _compact_prefixed_value(label, "+")
-		WheelConfig.OP_SUBTRACT:
-			return "Minus " + _compact_prefixed_value(label, "-")
-		WheelConfig.OP_MULTIPLY:
-			return "Multiply " + _compact_prefixed_value(label, "x")
-		WheelConfig.OP_DIVIDE:
-			return "Divide " + _compact_prefixed_value(label, "/")
-		_:
-			return "None 0"
-
-func _compact_prefixed_value(label: String, prefix: String) -> String:
-	if not label.begins_with(prefix):
-		return label
-	var amount = int(round(label.substr(1).replace(",", "").to_float()))
-	return prefix + UiFormat.compact_number(amount)

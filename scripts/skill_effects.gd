@@ -52,19 +52,21 @@ const MOMENTUM_POSITIVE_SLOTS_PER_STACK = 2
 const MOMENTUM_MAX_BONUS_SLOTS = 20
 
 # First upgrade level cost. Upgrade costs scale by level squared.
-const UPGRADE_COST_START = 25
+const UPGRADE_COST_START = 35
 
 # First unique cost. Unique costs scale by unique count squared.
-const UNIQUE_COST_START = 500
+const UNIQUE_COST_START = 700
 
 # Upgrade levels above this get an extra steep quadratic multiplier.
-const UPGRADE_EXPENSIVE_AFTER_LEVEL = 10
+const UPGRADE_EXPENSIVE_AFTER_LEVEL = 6
 
 static func upgrade_cost_for_level(level: int) -> int:
 	var cost = UPGRADE_COST_START * level * level
+	if level >= 4:
+		cost = int(round(float(cost) * (1.0 + 0.18 * float(level - 3))))
 	if level > UPGRADE_EXPENSIVE_AFTER_LEVEL:
-		cost = int(round(float(cost) * (1.0 + pow(float(level - UPGRADE_EXPENSIVE_AFTER_LEVEL), 2.0))))
+		cost = int(round(float(cost) * (1.0 + 0.85 * float(level - UPGRADE_EXPENSIVE_AFTER_LEVEL))))
 	return cost
 
 static func unique_cost_for_count(unique_count: int) -> int:
-	return UNIQUE_COST_START * unique_count * unique_count
+	return int(round(float(UNIQUE_COST_START * unique_count * unique_count) * (1.0 + 0.2 * float(max(0, unique_count - 1)))))

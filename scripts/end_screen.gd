@@ -25,6 +25,7 @@ func _ready():
 	if DisplayServer.get_name() != "headless":
 		jackpot_sound.play()
 	_populate_screen()
+	_configure_focus_navigation()
 	play_again_button.pressed.connect(_on_restart)
 	main_menu_button.pressed.connect(_on_main_menu)
 	_play_intro_animation()
@@ -45,9 +46,14 @@ func _populate_outcome_rows() -> void:
 		var color_key := _color_key_for_row(row.name)
 		if color_key.is_empty():
 			continue
+		var tint := _outcome_row_color(color_key)
+		var label := row.get_node_or_null("Label") as Label
 		var value_label := row.get_node_or_null("Value") as Label
+		if label != null:
+			label.add_theme_color_override("font_color", tint)
 		if value_label != null:
 			value_label.text = str(int(Game.run_color_counts.get(color_key, 0)))
+			value_label.add_theme_color_override("font_color", tint.lightened(0.22))
 
 func _populate_breakdown_rows() -> void:
 	if outcome_vbox.has_node("CoinBreakdownTitle"):
@@ -96,6 +102,21 @@ func _color_key_for_row(row_name: String) -> String:
 			return "jackpot"
 		_:
 			return ""
+
+func _outcome_row_color(color_key: String) -> Color:
+	match color_key:
+		"green":
+			return Color(0.4, 0.92, 0.44, 1)
+		"red":
+			return Color(1.0, 0.46, 0.38, 1)
+		"gold":
+			return Color(1.0, 0.84, 0.28, 1)
+		"grey":
+			return Color(0.82, 0.82, 0.82, 1)
+		"jackpot":
+			return Color(1.0, 0.92, 0.46, 1)
+		_:
+			return Color(0.92, 0.86, 0.74, 1)
 
 func _populate_build_grid() -> void:
 	for child in build_grid.get_children():
@@ -201,3 +222,41 @@ func _on_main_menu() -> void:
 	if main != null and main.has_method("_show_main_menu"):
 		main.call("_show_main_menu")
 	queue_free()
+
+func _configure_focus_navigation() -> void:
+	play_again_button.focus_mode = Control.FOCUS_ALL
+	main_menu_button.focus_mode = Control.FOCUS_ALL
+	play_again_button.focus_neighbor_right = main_menu_button.get_path()
+	play_again_button.focus_neighbor_left = play_again_button.get_path()
+	main_menu_button.focus_neighbor_left = play_again_button.get_path()
+	main_menu_button.focus_neighbor_right = main_menu_button.get_path()
+
+	var chips: Array[Button] = []
+	for child in build_grid.get_children():
+		if child is Button:
+			var button := child as Button
+			button.focus_mode = Control.FOCUS_ALL
+			chips.append(button)
+	if chips.is_empty():
+		play_again_button.focus_neighbor_top = play_again_button.get_path()
+		main_menu_button.focus_neighbor_top = play_again_button.get_path()
+		return
+
+	var columns := maxi(1, build_grid.columns)
+	for index in range(chips.size()):
+		var button := chips[index]
+		var left_index := maxi(index - 1, 0)
+		var right_index := mini(index + 1, chips.size() - 1)
+		var up_index := maxi(index - columns, 0)
+		var down_index := index + columns
+		button.focus_neighbor_left = chips[left_index].get_path()
+		button.focus_neighbor_right = chips[right_index].get_path()
+		button.focus_neighbor_top = chips[up_index].get_path()
+		button.focus_neighbor_bottom = play_again_button.get_path() if down_index >= chips.size() else chips[down_index].get_path()
+
+	play_again_button.focus_neighbor_top = chips[0].get_path()
+	main_menu_button.focus_neighbor_top = chips[mini(chips.size() - 1, columns - 1)].get_path()
+
+func focus_default_control() -> void:
+	if play_again_button != null and play_again_button.visible and not play_again_button.disabled:
+		play_again_button.grab_focus()

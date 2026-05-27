@@ -23,6 +23,12 @@ const UiFormat = preload("res://scripts/ui_format.gd")
 	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3 as PanelContainer,
 	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4 as PanelContainer,
 ]
+@onready var buy_buttons: Array[Button] = [
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard1/Content/BuyButton as Button,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard2/Content/BuyButton as Button,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard3/Content/BuyButton as Button,
+	$CenterContainer/ShopPanel/ShopVBox/ScrollContainer/SkillsVBox/SkillCard4/Content/BuyButton as Button,
+]
 
 var refresh_queued := false
 var offered_skills: Array[Dictionary] = []
@@ -66,6 +72,7 @@ func _populate_skills():
 		var can_afford = Game.coins >= cost and not bought
 
 		_configure_card(card, skill, level, cost, can_afford, bought)
+	_configure_focus_navigation()
 
 func _connect_skill_card_buttons() -> void:
 	for card in skill_cards:
@@ -74,6 +81,9 @@ func _connect_skill_card_buttons() -> void:
 
 func _hide_card(card: PanelContainer) -> void:
 	card.visible = false
+	var index := skill_cards.find(card)
+	if index >= 0 and index < buy_buttons.size() and buy_buttons[index] != null:
+		buy_buttons[index].focus_mode = Control.FOCUS_NONE
 	if card.has_meta("skill"):
 		card.remove_meta("skill")
 
@@ -96,6 +106,7 @@ func _configure_card(card: PanelContainer, skill: Dictionary, level: int, cost: 
 
 	buy_button.text = ""
 	buy_button.disabled = not can_afford
+	buy_button.focus_mode = Control.FOCUS_ALL if can_afford else Control.FOCUS_NONE
 	buy_content.visible = not bought
 	buy_text_label.text = UiFormat.compact_number(cost)
 
@@ -184,3 +195,38 @@ func _on_close():
 	close_sound.play()
 	await close_sound.finished
 	queue_free()
+
+func _configure_focus_navigation() -> void:
+	var active_buttons: Array[Button] = []
+	for index in range(skill_cards.size()):
+		var card := skill_cards[index]
+		var button := buy_buttons[index]
+		if card.visible and button != null and not button.disabled:
+			active_buttons.append(button)
+
+	continue_button.focus_mode = Control.FOCUS_ALL
+	if active_buttons.is_empty():
+		continue_button.focus_neighbor_top = continue_button.get_path()
+		continue_button.focus_neighbor_left = continue_button.get_path()
+		continue_button.focus_neighbor_right = continue_button.get_path()
+		return
+
+	for index in range(active_buttons.size()):
+		var button := active_buttons[index]
+		button.focus_neighbor_left = active_buttons[maxi(index - 1, 0)].get_path()
+		button.focus_neighbor_right = active_buttons[mini(index + 1, active_buttons.size() - 1)].get_path()
+		button.focus_neighbor_bottom = continue_button.get_path()
+		button.focus_neighbor_top = button.get_path()
+	continue_button.focus_neighbor_top = active_buttons[0].get_path()
+	continue_button.focus_neighbor_left = continue_button.get_path()
+	continue_button.focus_neighbor_right = continue_button.get_path()
+
+func focus_default_control() -> void:
+	for index in range(skill_cards.size()):
+		var card := skill_cards[index]
+		var button := buy_buttons[index]
+		if card.visible and button != null and not button.disabled:
+			button.grab_focus()
+			return
+	if continue_button != null and continue_button.visible and not continue_button.disabled:
+		continue_button.grab_focus()
