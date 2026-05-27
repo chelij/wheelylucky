@@ -145,8 +145,8 @@ func _input(event):
 		_set_navigation_focus_enabled(false)
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_set_navigation_focus_enabled(false)
-		# A background click spins the wheel, but never steal clicks from active buttons or modal shop UI.
-		if wheel_node.has_method("can_start_spin") and bool(wheel_node.call("can_start_spin")) and not _is_modal_open() and not _is_mouse_over_enabled_button(event.position):
+		# A background click spins the wheel, but never steal clicks from active buttons, modals, or stats panel.
+		if wheel_node.has_method("can_start_spin") and bool(wheel_node.call("can_start_spin")) and not _is_modal_open() and not _is_mouse_over_enabled_button(event.position) and not _is_click_on_stats_panel(event.position) and not _is_popup_open():
 			wheel_node.start_spin()
 			get_viewport().set_input_as_handled()
 
@@ -405,6 +405,7 @@ func _enter_game() -> void:
 	_update_stats()
 	_on_shop_available_changed(Game.shop_available)
 	last_highest_affordable_wheel = Game.get_highest_affordable_wheel()
+	wheel_node._update_wheel_arrow_buttons()
 
 func _show_stats_window() -> void:
 	var vbox := _open_modal("Stats", Vector2(620, 560))
@@ -1100,6 +1101,11 @@ func _is_shop_open() -> bool:
 func _is_modal_open() -> bool:
 	return _is_shop_open() or _is_end_screen_open() or main_menu_layer != null or modal_layer != null
 
+func _is_click_on_stats_panel(pos: Vector2) -> bool:
+	if $StatsPanel.visible and $StatsPanel.is_inside_tree():
+		return $StatsPanel.get_global_rect().has_point(pos)
+	return false
+
 func _is_end_screen_open() -> bool:
 	for child in get_children():
 		if child.name == "EndScreen":
@@ -1125,6 +1131,8 @@ func _on_spin_finished(outcome):
 		await _play_resolution_events(result.get("resolution_events", []))
 		Game.flush_coin_changed()
 		resolution_events_in_progress = false
+		if not Game.is_wheel_unlocked(Game.selected_wheel):
+			Game.select_wheel(Game.get_highest_affordable_wheel())
 		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
 			wheel_node.call("set_spin_locked", false)
 		var highest := Game.get_highest_affordable_wheel()
@@ -1132,6 +1140,8 @@ func _on_spin_finished(outcome):
 			_pulse_wheel_indicator(highest)
 		last_highest_affordable_wheel = highest
 		wheel_node.set_all_buttons_visible(true)
+		await get_tree().process_frame
+		wheel_node._update_wheel_arrow_buttons()
 		if bool(result.get("game_over", false)):
 			await get_tree().create_timer(0.6 if not reduced_motion_enabled else 0.18).timeout
 			_on_game_ended(Game.coins, Game.get_elapsed_seconds())
@@ -1541,6 +1551,7 @@ func _make_upgrade_icon(skill_id: String, level: int, _skill_name: String) -> Co
 	frame.set_meta("skill_id", skill_id)
 	frame.custom_minimum_size = Vector2(58, 58)
 	frame.pivot_offset = frame.custom_minimum_size / 2.0
+	frame.gui_input.connect(Callable(self, "_on_skill_icon_clicked").bind(skill_id, level))
 	skill_icon_frames[skill_id] = frame
 
 	var icon = TextureRect.new()
@@ -1578,3 +1589,132 @@ func _make_level_badge_style() -> StyleBoxFlat:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(11)
 	return style
+
+func _on_skill_icon_clicked(event: InputEvent, skill_id: String, level: int) -> void:
+	if not (event is InputEventMouseButton and (event as InputEventMouseButton).pressed):
+		return
+	get_viewport().set_input_as_handled()
+	var skill = SkillManager.get_skill_by_id(skill_id)
+	if skill.is_empty():
+		return
+	var max_level: int = skill.get("max", 0)
+	var is_unique := skill_id in Game.unique_skills
+	var is_maxed := (max_level > 0 and level >= max_level)
+
+	var current_effect := SkillManager.get_effect_text(skill_id, level) if not is_maxed else "Max Level"
+	var next_effect := SkillManager.get_effect_text(skill_id, level + 1) if not is_maxed else ""
+	var cost = SkillManager.get_purchase_cost(skill, level)
+
+	_skill_info_popup(skill_id, skill.get("name", skill_id), skill.get("desc", ""), level, current_effect, next_effect, cost, is_maxed, is_unique)
+
+func _close_skill_popup() -> void:
+	for child in $StatsPanel.get_children():
+		if child.name == "SkillInfoPopup":
+			child.queue_free()
+			break
+	for overlay in get_children():
+		if overlay.name == "SkillPopupOverlay":
+			overlay.queue_free()
+			break
+
+func _on_popup_overlay_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		_close_skill_popup()
+		get_viewport().set_input_as_handled()
+
+func _is_popup_open() -> bool:
+	for child in $StatsPanel.get_children():
+		if child.name == "SkillInfoPopup":
+			return true
+	return false
+
+func _skill_info_popup(skill_id: String, name: String, desc: String, level: int, current_effect: String, next_effect: String, cost: int, is_maxed: bool, is_unique: bool) -> void:
+	_close_skill_popup()
+
+	var frame = skill_icon_frames.get(skill_id)
+	if frame == null or not is_instance_valid(frame):
+		return
+	$StatsPanel.visible = true
+	await get_tree().process_frame
+
+	# Overlay to capture clicks outside popup
+	var overlay = Control.new()
+	overlay.name = "SkillPopupOverlay"
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.gui_input.connect(_on_popup_overlay_input)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var popup = PanelContainer.new()
+	popup.name = "SkillInfoPopup"
+	popup.mouse_filter = Control.MOUSE_FILTER_PASS
+	popup.visible = false
+
+	# Background style
+	var bg_style = StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.1, 0.1, 0.14, 0.95)
+	bg_style.set_corner_radius_all(8)
+	bg_style.set_border_width_all(2)
+	bg_style.border_color = Color(0.35, 0.35, 0.45, 1)
+	bg_style.set_content_margin_all(16)
+	popup.add_theme_stylebox_override("panel", bg_style)
+
+	# Content
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	vbox.set_anchors_preset(Control.PRESET_VCENTER_WIDE)
+	popup.add_child(vbox)
+
+	var title = Label.new()
+	title.text = name.to_upper()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.24, 1))
+	title.size_flags_horizontal = Control.SIZE_FILL
+	vbox.add_child(title)
+
+	var spacer1 = Label.new()
+	spacer1.text = ""
+	spacer1.custom_minimum_size = Vector2(0, 6)
+	vbox.add_child(spacer1)
+
+	var desc_label = Label.new()
+	desc_label.text = desc
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.add_theme_font_size_override("font_size", 16)
+	desc_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9, 1))
+	desc_label.size_flags_horizontal = Control.SIZE_FILL
+	vbox.add_child(desc_label)
+
+	var spacer2 = Label.new()
+	spacer2.text = ""
+	spacer2.custom_minimum_size = Vector2(0, 6)
+	vbox.add_child(spacer2)
+
+	if not is_unique:
+		var current_label = Label.new()
+		current_label.text = "Current (Lvl " + str(level) + "):\n" + current_effect
+		current_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		current_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		current_label.add_theme_font_size_override("font_size", 15)
+		current_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.65, 1))
+		current_label.size_flags_horizontal = Control.SIZE_FILL
+		vbox.add_child(current_label)
+
+	if not is_maxed and not is_unique:
+		var next_label = Label.new()
+		next_label.text = "Next (Lvl " + str(level + 1) + "):\n" + next_effect + "\n◆" + str(cost)
+		next_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		next_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		next_label.add_theme_font_size_override("font_size", 15)
+		next_label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.3, 1))
+		next_label.size_flags_horizontal = Control.SIZE_FILL
+		vbox.add_child(next_label)
+
+	$StatsPanel.add_child(popup)
+	popup.z_index = 10
+	popup.layout_mode = 1
+	popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+	popup.set_offsets_preset(Control.PRESET_FULL_RECT)
+	popup.visible = true

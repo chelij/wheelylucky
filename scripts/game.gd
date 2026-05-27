@@ -243,8 +243,7 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = [], coin
 	if spun_wheel == MAX_WHEELS and not game_over:
 		cycle_count += 1
 
-	if not game_over:
-		select_highest_affordable_at_or_below_selected()
+	# Wheel affordability check deferred to caller after all effects finish
 
 	# Save best score on game over
 	if game_over:

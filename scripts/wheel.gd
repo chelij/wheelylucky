@@ -206,8 +206,11 @@ func _update_shop_button() -> void:
 		shop_button.modulate = Color.WHITE
 
 func set_all_buttons_visible(is_visible: bool) -> void:
-	prev_wheel_button.visible = is_visible
-	next_wheel_button.visible = is_visible
+	if is_visible:
+		_update_wheel_arrow_buttons()
+	else:
+		prev_wheel_button.visible = false
+		next_wheel_button.visible = false
 	shop_button.visible = is_visible and shop_offer_available
 
 func start_spin():
@@ -316,12 +319,13 @@ func _on_wheel_changed(_wheel_num: int):
 	queue_redraw()
 
 func _update_wheel_arrow_buttons() -> void:
+	var locked = _is_busy() or not Game.can_afford_wheel(Game.selected_wheel)
 	var has_prev = Game.selected_wheel > 1
 	for wheel_num in range(Game.selected_wheel - 1, 0, -1):
 		if Game.is_wheel_unlocked(wheel_num):
 			has_prev = true
 			break
-	prev_wheel_button.visible = has_prev and not _is_busy()
+	prev_wheel_button.visible = has_prev and not locked
 	prev_wheel_button.disabled = false
 
 	var has_next = Game.selected_wheel < Game.MAX_WHEELS
@@ -329,7 +333,7 @@ func _update_wheel_arrow_buttons() -> void:
 		if Game.is_wheel_unlocked(wheel_num):
 			has_next = true
 			break
-	next_wheel_button.visible = has_next and not _is_busy()
+	next_wheel_button.visible = has_next and not locked
 	next_wheel_button.disabled = false
 
 func _on_skills_changed():

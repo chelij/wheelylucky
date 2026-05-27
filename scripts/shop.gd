@@ -194,6 +194,8 @@ func _on_close():
 	_update_continue_button_state()
 	close_sound.play()
 	await close_sound.finished
+	if not Game.is_wheel_unlocked(Game.selected_wheel):
+		Game.select_wheel(Game.get_highest_affordable_wheel())
 	queue_free()
 
 func _configure_focus_navigation() -> void:
