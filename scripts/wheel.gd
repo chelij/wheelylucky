@@ -47,6 +47,10 @@ var rng := RandomNumberGenerator.new()
 # Cached for consistent drawing during spin
 var cached_outcomes: Array = []
 var cached_slots: Array = []
+var cached_section_polygons: Array[PackedVector2Array] = []
+var cached_section_colors: Array[Color] = []
+var cached_section_edges: Array[float] = []
+var cached_label_layouts: Array[Dictionary] = []
 var w10_tension_emitted: bool = false
 var w10_tension_active: bool = false
 var spin_locked: bool = false
@@ -84,6 +88,67 @@ func _refresh_outcomes():
 	if "randomizer" in Game.unique_skills:
 		# Randomizer shuffles individual slot positions on the wheel while preserving total odds.
 		cached_slots.shuffle()
+	_rebuild_wheel_geometry_cache()
+
+func _rebuild_wheel_geometry_cache() -> void:
+	cached_section_polygons.clear()
+	cached_section_colors.clear()
+	cached_section_edges.clear()
+	cached_label_layouts.clear()
+
+	if cached_slots.is_empty():
+		return
+
+	var outer_radius := 250.0
+	var hub_radius := 120.0
+	var slot_angle := TAU / float(cached_slots.size())
+	var sections := _build_label_sections(cached_slots)
+
+	for slot_index in range(cached_slots.size()):
+		var outcome = cached_slots[slot_index]
+		var start_angle := float(slot_index) * slot_angle
+		var end_angle := start_angle + slot_angle + 0.001
+		var points := PackedVector2Array()
+		points.append(Vector2.ZERO)
+		for j in range(9):
+			var angle = start_angle + (end_angle - start_angle) * (float(j) / 8.0)
+			points.append(Vector2(cos(angle), sin(angle)) * outer_radius)
+		cached_section_polygons.append(points)
+
+		var segment_color: Color = outcome[IDX_COLOR].lightened(0.12)
+		segment_color.a = 1.0
+		cached_section_colors.append(segment_color)
+
+		var next_outcome = cached_slots[(slot_index + 1) % cached_slots.size()]
+		if next_outcome != outcome:
+			cached_section_edges.append(end_angle)
+
+	for section in sections:
+		var start_index := int(section["start"])
+		var slot_count := int(section["count"])
+		var outcome: Array = section["outcome"]
+		var sweep := slot_angle * float(slot_count)
+		var mid_angle := (float(start_index) + float(slot_count) * 0.5) * slot_angle
+		var radius := hub_radius + (outer_radius - hub_radius) * 0.6
+		var tangent := mid_angle + PI * 0.5
+		if cos(mid_angle) < 0.0:
+			tangent += PI
+
+		var value := _segment_label_value(outcome)
+		var value_size: int = clamp(int(round(16.0 + float(slot_count) * 0.24)), 11, 28)
+		if sweep < 0.18:
+			value = _segment_micro_label(outcome)
+			value_size = min(value_size, 10)
+		elif sweep < 0.34:
+			value_size = min(value_size, 13)
+
+		cached_label_layouts.append({
+			"mid_angle": mid_angle,
+			"radius": radius,
+			"tangent": tangent,
+			"value": value,
+			"font_size": value_size,
+		})
 
 func _process(delta):
 	if is_spinning:
@@ -413,48 +478,32 @@ func is_pointer_near_jackpot(radius_slots: int = 8) -> bool:
 	return wrapped_distance <= max(1, radius_slots)
 
 func _draw():
-	var wheel_slots = cached_slots
-	if wheel_slots.size() == 0:
+	if cached_slots.size() == 0:
 		_refresh_outcomes()
-		wheel_slots = cached_slots
 
 	var center = size / 2.0
 	var outer_radius = 250.0
 	var hub_radius = 120.0
 
-	if wheel_slots.size() == 0 or outer_radius <= 0:
+	if cached_slots.size() == 0 or outer_radius <= 0:
 		return
 
 	var rotation_rad = deg_to_rad(current_rotation)
-	var slot_angle = TAU / float(wheel_slots.size())
-	var section_edges: Array[float] = []
 
 	_draw_alpha_gradient_shadow(center, outer_radius + 10.0, 28.0, 0.13, 10, Vector2(0, 4))
-	draw_circle(center, outer_radius + 26.0, Color(0.18, 0.035, 0.035, 0.98))
-	draw_arc(center, outer_radius + 31.0, 0.0, TAU, 180, Color(1.0, 0.75, 0.18, 0.88), 5.0)
-	draw_arc(center, outer_radius + 18.0, 0.0, TAU, 180, Color(0.9, 0.16, 0.04, 0.9), 4.0)
+	draw_set_transform(center, rotation_rad, Vector2.ONE)
+	draw_circle(Vector2.ZERO, outer_radius + 26.0, Color(0.18, 0.035, 0.035, 0.98))
+	draw_arc(Vector2.ZERO, outer_radius + 31.0, 0.0, TAU, 180, Color(1.0, 0.75, 0.18, 0.88), 5.0)
+	draw_arc(Vector2.ZERO, outer_radius + 18.0, 0.0, TAU, 180, Color(0.9, 0.16, 0.04, 0.9), 4.0)
 
-	for slot_index in range(wheel_slots.size()):
-		var outcome = wheel_slots[slot_index]
-		var start_angle = rotation_rad + float(slot_index) * slot_angle
-		var end_angle = start_angle + slot_angle + 0.001
-		var points = PackedVector2Array()
-		points.append(center)
-		for j in range(9):
-			var angle = start_angle + (end_angle - start_angle) * (float(j) / 8.0)
-			points.append(center + Vector2(cos(angle), sin(angle)) * outer_radius)
-
-		var segment_color: Color = outcome[IDX_COLOR].lightened(0.12)
-		segment_color.a = 1.0
-		draw_colored_polygon(points, segment_color)
-
-		var next_outcome = wheel_slots[(slot_index + 1) % wheel_slots.size()]
-		if next_outcome != outcome:
-			section_edges.append(end_angle)
+	for index in range(cached_section_polygons.size()):
+		draw_colored_polygon(cached_section_polygons[index], cached_section_colors[index])
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	var separator_color = Color(1.0, 0.82, 0.24, 0.92)
-	for edge_angle in section_edges:
-		if _is_pointer_side_edge(edge_angle):
+	for edge_angle_base in cached_section_edges:
+		var edge_angle: float = rotation_rad + float(edge_angle_base)
+		if _is_pointer_side_edge(fposmod(edge_angle, TAU)):
 			continue
 		draw_line(center, center + Vector2(cos(edge_angle), sin(edge_angle)) * outer_radius, separator_color, 1.0, true)
 
@@ -463,7 +512,7 @@ func _draw():
 	draw_arc(center, outer_radius + 2.0, 0.0, TAU, 160, Color(1.0, 0.95, 0.48), 4.0)
 	_draw_alpha_gradient_arc_shadow(center, outer_radius - 3.0, 18.0, 0.14, 8, 10.0)
 	draw_arc(center, outer_radius, 0.0, TAU, 160, Color(0.45, 0.21, 0.02), 2.2)
-	_draw_segment_labels(center, outer_radius, hub_radius, rotation_rad, slot_angle, wheel_slots)
+	_draw_segment_labels(center, rotation_rad)
 	_draw_center_medallion(center, hub_radius)
 	_draw_wheel_progress()
 
@@ -501,35 +550,19 @@ func _is_pointer_side_edge(angle: float) -> bool:
 	var normalized = fposmod(angle, TAU)
 	return normalized < 0.035 or normalized > TAU - 0.035
 
-func _draw_segment_labels(center: Vector2, outer_radius: float, hub_radius: float, rotation_rad: float, slot_angle: float, wheel_slots: Array) -> void:
-	if wheel_slots.is_empty():
+func _draw_segment_labels(center: Vector2, rotation_rad: float) -> void:
+	if cached_label_layouts.is_empty():
 		return
 	var font := ThemeDB.fallback_font
 	if font == null:
 		return
-	var sections := _build_label_sections(wheel_slots)
-	for section in sections:
-		var start_index := int(section["start"])
-		var slot_count := int(section["count"])
-		var outcome: Array = section["outcome"]
-		var sweep := slot_angle * float(slot_count)
-		var mid_angle := rotation_rad + (float(start_index) + float(slot_count) * 0.5) * slot_angle
-		var radius := hub_radius + (outer_radius - hub_radius) * 0.6
+	for layout in cached_label_layouts:
+		var mid_angle := rotation_rad + float(layout["mid_angle"])
+		var radius := float(layout["radius"])
 		var center_pos := center + Vector2(cos(mid_angle), sin(mid_angle)) * radius
-		var tangent := mid_angle + PI * 0.5
-		if cos(mid_angle) < 0.0:
-			tangent += PI
-
-		var value := _segment_label_value(outcome)
-		var value_size: int = clamp(int(round(16.0 + float(slot_count) * 0.24)), 11, 28)
-		if sweep < 0.18:
-			value = _segment_micro_label(outcome)
-			value_size = min(value_size, 10)
-		elif sweep < 0.34:
-			value_size = min(value_size, 13)
-
+		var tangent := rotation_rad + float(layout["tangent"])
 		draw_set_transform(center_pos, tangent, Vector2.ONE)
-		_draw_segment_text_line(font, value, value_size, 0.0)
+		_draw_segment_text_line(font, str(layout["value"]), int(layout["font_size"]), 0.0)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_segment_text_line(font: Font, text: String, font_size: int, y_offset: float) -> void:
