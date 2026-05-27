@@ -328,7 +328,7 @@ func _update_wheel_arrow_buttons() -> void:
 	prev_wheel_button.visible = has_prev and not locked
 	prev_wheel_button.disabled = false
 
-	var has_next = Game.selected_wheel < Game.MAX_WHEELS
+	var has_next = false
 	for wheel_num in range(Game.selected_wheel + 1, Game.MAX_WHEELS + 1):
 		if Game.is_wheel_unlocked(wheel_num):
 			has_next = true
