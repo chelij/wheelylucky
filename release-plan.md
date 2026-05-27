@@ -190,9 +190,6 @@ This replaces `polish.md`. Use this section as the single source of truth for th
 
 - `godot --headless --editor --path . --quit` completed successfully and imported `end-game-jackpot-stage.png` plus `background-music.wav`.
 - `godot --headless --path . --quit` completed successfully with no runtime script errors after skipping music playback in headless mode.
-- `godot --headless --path . --script res://scripts/verify_polish_runtime.gd` completed successfully.
-- `godot --headless --path . --script res://scripts/verify_polish.gd` completed successfully.
-- Runtime verification now also checks keyboard/controller focus routing for main menu, options, shop, and end-screen controls.
 - `env HOME=/tmp godot --headless --editor --path . --quit` completed successfully with `export_presets.cfg` present.
 - `env HOME=/tmp godot --headless --path . --export-release "Linux/X11" /tmp/wheely-lucky.x86_64` and `env HOME=/tmp godot --headless --path . --export-release "Windows Desktop" /tmp/wheely-lucky.exe` both reached preset validation and failed only because export templates are not installed in this environment.
 - `xvfb-run -a godot --path . --script /tmp/wheely_ui_screenshots.gd` rendered visual verification screenshots:

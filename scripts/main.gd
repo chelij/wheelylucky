@@ -20,6 +20,7 @@ const UiFormat = preload("res://scripts/ui_format.gd")
 @onready var upgrades_vbox: VBoxContainer = $StatsPanel/StatsVBox/UpgradesScroll/UpgradesVBox
 @onready var wheel_node: Control = $Wheel
 @onready var coins_display: Label = $Wheel/CoinsDisplay
+@onready var pointer_indicator: Control = $Wheel/PointerArrow/PointerIndicator
 @onready var result_positive_sound: AudioStreamPlayer = $ResultPositiveSound
 @onready var result_negative_sound: AudioStreamPlayer = $ResultNegativeSound
 @onready var multiplier_sound: AudioStreamPlayer = $MultiplierSound
@@ -43,10 +44,9 @@ var reduced_motion_enabled: bool = false
 var muted_flashes_enabled: bool = false
 var large_ui_text_enabled: bool = false
 var last_highest_affordable_wheel: int = 1
-var base_font_sizes: Dictionary = {}
 var w10_preview_focus_played: bool = false
-var resolution_events_in_progress: bool = false
 var navigation_focus_enabled: bool = false
+var effect_rng := RandomNumberGenerator.new()
 
 const MAX_WHEELS = 10
 const RESOLUTION_OPTIONS := [
@@ -72,6 +72,7 @@ const RUN_HISTORY_PAGE_SIZE := 3
 
 func _ready():
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	effect_rng.randomize()
 	get_viewport().size_changed.connect(_layout_game_ui)
 	if not get_tree().node_added.is_connected(_on_node_added):
 		get_tree().node_added.connect(_on_node_added)
@@ -152,33 +153,22 @@ func _input(event):
 
 func _setup_background_music() -> void:
 	if DisplayServer.get_name() == "headless":
-		print("BGM: headless, skipping")
 		return
 	if music_player == null:
-		print("BGM: music_player is null")
 		return
 	if music_player.stream == null:
-		print("BGM: stream is null")
 		return
-	print("BGM: setting up (stream=", music_player.stream.resource_name, " type=", music_player.stream.get_class(), ")")
 	music_player.autoplay = false
 	music_player.stream_paused = false
 	if not music_player.finished.is_connected(_restart_background_music):
 		music_player.finished.connect(_restart_background_music)
-	print("BGM: deferring _ensure_background_music_playing")
 	call_deferred("_ensure_background_music_playing")
 
 func _ensure_background_music_playing() -> void:
-	print("BGM: _ensure_background_music_playing called, playing=", music_player.playing, " stream=", music_player.stream)
 	if music_player == null or music_player.stream == null:
-		print("BGM: early exit (null check)")
 		return
 	if not music_player.playing:
-		print("BGM: calling music_player.play()")
 		music_player.play()
-		print("BGM: after play(), playing=", music_player.playing)
-	else:
-		print("BGM: already playing")
 
 func _restart_background_music() -> void:
 	if music_player == null or music_player.stream == null:
@@ -1125,12 +1115,10 @@ func _on_spin_finished(outcome):
 	
 	if result.get("success", false):
 		await _play_result_polish(result)
-		resolution_events_in_progress = true
 		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
 			wheel_node.call("set_spin_locked", true)
 		await _play_resolution_events(result.get("resolution_events", []))
 		Game.flush_coin_changed()
-		resolution_events_in_progress = false
 		if not Game.is_wheel_unlocked(Game.selected_wheel):
 			Game.select_wheel(Game.get_highest_affordable_wheel())
 		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
@@ -1164,32 +1152,29 @@ func _play_result_polish(result: Dictionary) -> void:
 			await _play_w10_loss_focus(false)
 
 func _get_wheel_effect_position() -> Vector2:
-	var pointer := wheel_node.get_node_or_null("PointerArrow/PointerIndicator") as Control
-	if pointer != null:
-		return pointer.global_position + pointer.size * 0.5
+	if pointer_indicator != null:
+		return pointer_indicator.global_position + pointer_indicator.size * 0.5
 	return wheel_node.global_position + wheel_node.size * 0.5
 
 func _spawn_particle_burst(origin: Vector2, color: Color, count: int) -> void:
 	if reduced_motion_enabled:
 		return
 	var alpha := 0.42 if muted_flashes_enabled else 0.95
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
 	for index in range(count):
 		var particle := ColorRect.new()
 		particle.color = Color(color.r, color.g, color.b, alpha)
-		particle.size = Vector2(rng.randf_range(5.0, 10.0), rng.randf_range(5.0, 10.0))
+		particle.size = Vector2(effect_rng.randf_range(5.0, 10.0), effect_rng.randf_range(5.0, 10.0))
 		particle.global_position = origin - particle.size * 0.5
-		particle.rotation = rng.randf_range(0.0, TAU)
+		particle.rotation = effect_rng.randf_range(0.0, TAU)
 		particle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(particle)
-		var angle := rng.randf_range(0.0, TAU)
-		var distance := rng.randf_range(42.0, 128.0)
+		var angle := effect_rng.randf_range(0.0, TAU)
+		var distance := effect_rng.randf_range(42.0, 128.0)
 		var target := origin + Vector2(cos(angle), sin(angle)) * distance
 		var tween := create_tween()
 		tween.set_parallel(true)
-		tween.tween_property(particle, "global_position", target, rng.randf_range(0.42, 0.68)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tween.tween_property(particle, "rotation", particle.rotation + rng.randf_range(-3.0, 3.0), 0.6)
+		tween.tween_property(particle, "global_position", target, effect_rng.randf_range(0.42, 0.68)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(particle, "rotation", particle.rotation + effect_rng.randf_range(-3.0, 3.0), 0.6)
 		tween.tween_property(particle, "modulate:a", 0.0, 0.6)
 		tween.chain().tween_callback(particle.queue_free)
 
@@ -1266,9 +1251,8 @@ func _get_next_wheel_arc_focus(target_wheel: int) -> Vector2:
 	return center + Vector2(cos(angle), sin(angle)) * radius
 
 func _pulse_wheel_indicator(target_wheel: int = 0) -> void:
-	var indicator := wheel_node.get_node_or_null("PointerArrow/PointerIndicator") as Control
 	var focus_point := _get_next_wheel_arc_focus(target_wheel if target_wheel > 0 else min(Game.MAX_WHEELS, last_highest_affordable_wheel + 1))
-	if indicator == null:
+	if pointer_indicator == null:
 		return
 	if not reduced_motion_enabled:
 		var ring_tint := Color(1.0, 0.92, 0.36, 1)
