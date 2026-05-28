@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bs5srblx0548x" path="res://scripts/end_screen.gd" id="1_end"]
 [ext_resource type="Texture2D" uid="uid://bscxax0gad8yi" path="res://assets/backgrounds/end-game-jackpot-stage.png" id="2_background"]
-[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="3_skill_icons"]
+[ext_resource type="Texture2D" path="res://assets/ui/game-ui-spritesheet.png" id="3_skill_icons"]
 [ext_resource type="AudioStream" uid="uid://cipe81rdxki3f" path="res://assets/sounds/jackpot.wav" id="4_jackpot_sound"]
 
 [node name="EndScreen" type="CanvasLayer" unique_id=715332776]

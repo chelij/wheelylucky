@@ -1,0 +1,227 @@
+{
+  "sheet": "assets/ui/game-ui-spritesheet.png",
+  "padding": 32,
+  "regions": {
+    "skill_icons": {
+      "source": "assets/ui/generated/skill-icons-source.png",
+      "region": [
+        32,
+        32,
+        1536,
+        768
+      ],
+      "size": [
+        1536,
+        768
+      ]
+    },
+    "shop_panel": {
+      "source": "assets/ui/generated/shop-panel-v2.png",
+      "region": [
+        1600,
+        32,
+        980,
+        620
+      ],
+      "size": [
+        980,
+        620
+      ]
+    },
+    "wheel_shell": {
+      "source": "assets/ui/generated/wheel-shell-v1.png",
+      "region": [
+        32,
+        832,
+        1024,
+        1024
+      ],
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    "game_logo": {
+      "source": "assets/ui/generated/game-logo-source.png",
+      "region": [
+        1088,
+        832,
+        900,
+        420
+      ],
+      "size": [
+        900,
+        420
+      ]
+    },
+    "side_panel": {
+      "source": "assets/ui/generated/side-panel-v2.png",
+      "region": [
+        2020,
+        832,
+        320,
+        360
+      ],
+      "size": [
+        320,
+        360
+      ]
+    },
+    "coin_badge": {
+      "source": "assets/ui/generated/coin-badge-v3.png",
+      "region": [
+        2372,
+        832,
+        600,
+        200
+      ],
+      "size": [
+        600,
+        200
+      ]
+    },
+    "pointer": {
+      "source": "assets/ui/generated/pointer-v2.png",
+      "region": [
+        32,
+        1888,
+        512,
+        512
+      ],
+      "size": [
+        512,
+        512
+      ]
+    },
+    "shop_card": {
+      "source": "assets/ui/generated/shop-card-v2.png",
+      "region": [
+        576,
+        1888,
+        224,
+        318
+      ],
+      "size": [
+        224,
+        318
+      ]
+    },
+    "wheel_center_medallion": {
+      "source": "assets/ui/generated/wheel-center-medallion-v2.png",
+      "region": [
+        832,
+        1888,
+        256,
+        256
+      ],
+      "size": [
+        256,
+        256
+      ]
+    },
+    "coin": {
+      "source": "assets/ui/generated/coin-v2.png",
+      "region": [
+        1120,
+        1888,
+        128,
+        128
+      ],
+      "size": [
+        128,
+        128
+      ]
+    },
+    "shop_close_button": {
+      "source": "assets/ui/generated/shop-close-button-v3.png",
+      "region": [
+        1280,
+        1888,
+        360,
+        88
+      ],
+      "size": [
+        360,
+        88
+      ]
+    },
+    "prev_wheel": {
+      "source": "assets/ui/generated/prev-wheel-v2.png",
+      "region": [
+        1672,
+        1888,
+        128,
+        128
+      ],
+      "size": [
+        128,
+        128
+      ]
+    },
+    "next_wheel": {
+      "source": "assets/ui/generated/next-wheel-v2.png",
+      "region": [
+        1832,
+        1888,
+        128,
+        128
+      ],
+      "size": [
+        128,
+        128
+      ]
+    },
+    "shop_button": {
+      "source": "assets/ui/generated/shop-button-v2.png",
+      "region": [
+        1992,
+        1888,
+        96,
+        96
+      ],
+      "size": [
+        96,
+        96
+      ]
+    },
+    "buy_button": {
+      "source": "assets/ui/generated/buy-button-v2.png",
+      "region": [
+        2120,
+        1888,
+        176,
+        44
+      ],
+      "size": [
+        176,
+        44
+      ]
+    },
+    "bought_overlay": {
+      "source": "assets/ui/generated/bought-overlay-source.png",
+      "region": [
+        2328,
+        1888,
+        176,
+        70
+      ],
+      "size": [
+        176,
+        70
+      ]
+    },
+    "slot_indicator": {
+      "source": "assets/ui/generated/slot-indicator-source.png",
+      "region": [
+        2536,
+        1888,
+        32,
+        32
+      ],
+      "size": [
+        32,
+        32
+      ]
+    }
+  }
+}

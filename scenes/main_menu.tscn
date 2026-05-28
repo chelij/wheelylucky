@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://dyp0rvh8wy1hl" path="res://scripts/main_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" uid="uid://dipm3rko36dlv" path="res://assets/backgrounds/casino-stage.png" id="2_background"]
-[ext_resource type="Texture2D" uid="uid://d1s5nj7tn062x" path="res://assets/ui/game-logo.png" id="3_logo"]
-[ext_resource type="Texture2D" uid="uid://dvxrfxhj6nld4" path="res://assets/ui/shop-close-button.png" id="5_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/game-logo.tres" id="3_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/shop-close-button.tres" id="5_button"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
 content_margin_left = 34.0

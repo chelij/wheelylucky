@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://0l3r1dxqs7na"]
 
 [ext_resource type="Script" uid="uid://gfy3taxes62f" path="res://scripts/tutorial_modal.gd" id="1_tutorial"]
-[ext_resource type="Texture2D" uid="uid://bvjx277tacrt" path="res://assets/ui/prev-wheel.png" id="2_prev"]
-[ext_resource type="Texture2D" uid="uid://c4dhqtgk0mkjx" path="res://assets/ui/next-wheel.png" id="3_next"]
-[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="4_skill_icons"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/prev-wheel.tres" id="2_prev"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/next-wheel.tres" id="3_next"]
+[ext_resource type="Texture2D" path="res://assets/ui/game-ui-spritesheet.png" id="4_skill_icons"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 30.0
@@ -39,75 +39,75 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lucky_charm"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(0, 0, 256, 256)
+region = Rect2(32, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_quick_spin"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(256, 0, 256, 256)
+region = Rect2(288, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_discount_card"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(512, 0, 256, 256)
+region = Rect2(544, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_coin_magnet"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(768, 0, 256, 256)
+region = Rect2(800, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sharp_mind"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1024, 0, 256, 256)
+region = Rect2(1056, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_free_gift"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1280, 0, 256, 256)
+region = Rect2(1312, 32, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_shop_savvy"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(0, 256, 256, 256)
+region = Rect2(32, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_market_bell"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(256, 256, 256, 256)
+region = Rect2(288, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_collector"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(512, 256, 256, 256)
+region = Rect2(544, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_double_down"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(768, 256, 256, 256)
+region = Rect2(800, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_risk_taker"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1024, 256, 256, 256)
+region = Rect2(1056, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fortunes_favor"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1280, 256, 256, 256)
+region = Rect2(1312, 288, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_banker"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(0, 512, 256, 256)
+region = Rect2(32, 544, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_second_wind"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(256, 512, 256, 256)
+region = Rect2(288, 544, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_randomizer"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(512, 512, 256, 256)
+region = Rect2(544, 544, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_momentum"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(768, 512, 256, 256)
+region = Rect2(800, 544, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_golden_ticket"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1024, 512, 256, 256)
+region = Rect2(1056, 544, 256, 256)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_double_spin"]
 atlas = ExtResource("4_skill_icons")
-region = Rect2(1280, 512, 256, 256)
+region = Rect2(1312, 544, 256, 256)
 
 [node name="TutorialModal" type="CanvasLayer" unique_id=238423856]
 layer = 40

@@ -90,7 +90,7 @@ This replaces `polish.md`. Use this section as the single source of truth for th
   - Exit closes the game.
 - Reworked the main menu into a release-style title screen:
   - Full casino stage background.
-  - Large `assets/ui/game-logo.png` logo placed center-left.
+  - Large logo sprite from `assets/ui/game-ui-spritesheet.png` placed center-left.
   - Right-side menu button panel.
   - Textured casino button art using existing UI assets.
   - Dimmed Continue state remains visually disabled.
@@ -155,7 +155,11 @@ This replaces `polish.md`. Use this section as the single source of truth for th
   - `assets/backgrounds/end-game-jackpot-stage.png`
 - Added deterministic game logo:
   - Source: `assets/ui/game-logo.svg`
-  - Runtime asset: `assets/ui/game-logo.png`
+  - Runtime atlas: `assets/ui/game-ui-spritesheet.png`
+- Consolidated gameplay and menu UI textures into one runtime sprite sheet:
+  - Sheet: `assets/ui/game-ui-spritesheet.png`
+  - Region map: `assets/ui/game-ui-spritesheet-regions.json`
+  - Atlas resources: `assets/ui/atlas/*.tres`
 - Added CC0 music:
   - `assets/sounds/background-music.wav`
   - Source recorded in `assets/sounds/SOURCES.md`.

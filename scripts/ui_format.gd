@@ -1,5 +1,7 @@
 extends RefCounted
 
+const UiSprites = preload("res://scripts/ui_sprites.gd")
+
 const SKILL_ICON_ORDER = [
 	"lucky_charm",
 	"quick_spin",
@@ -62,16 +64,17 @@ static func skill_icon(skill_id: String, icon_atlas: Texture2D) -> AtlasTexture:
 	var index = SKILL_ICON_ORDER.find(skill_id)
 	if index < 0:
 		index = 0
-	var columns = 6
-	var cell_size = Vector2(256, 256)
 	var atlas = AtlasTexture.new()
-	atlas.atlas = icon_atlas
-	atlas.region = Rect2(
-		float(index % columns) * cell_size.x,
-		float(index / columns) * cell_size.y,
-		cell_size.x,
-		cell_size.y
-	)
+	atlas.atlas = icon_atlas if icon_atlas != null else UiSprites.sheet()
+	if atlas.atlas != null and atlas.atlas.get_width() == 1536 and atlas.atlas.get_height() == 768:
+		atlas.region = Rect2(
+			float(index % UiSprites.SKILL_ICON_COLUMNS) * UiSprites.SKILL_ICON_CELL_SIZE.x,
+			float(index / UiSprites.SKILL_ICON_COLUMNS) * UiSprites.SKILL_ICON_CELL_SIZE.y,
+			UiSprites.SKILL_ICON_CELL_SIZE.x,
+			UiSprites.SKILL_ICON_CELL_SIZE.y
+		)
+	else:
+		atlas.region = UiSprites.skill_icon_region(index)
 	return atlas
 
 static func _trim_decimal(value: float, decimals: int) -> String:

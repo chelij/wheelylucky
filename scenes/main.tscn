@@ -8,17 +8,18 @@
 [ext_resource type="PackedScene" uid="uid://codceu42lqc02" path="res://scenes/shop.tscn" id="2_shop"]
 [ext_resource type="PackedScene" uid="uid://0l3r1dxqs7na" path="res://scenes/tutorial_modal.tscn" id="2_tutorial"]
 [ext_resource type="Texture2D" uid="uid://dipm3rko36dlv" path="res://assets/backgrounds/casino-stage.png" id="3_background"]
-[ext_resource type="Texture2D" uid="uid://c1kypr17tt2dy" path="res://assets/pointer/pointer.png" id="4_pointer"]
-[ext_resource type="Texture2D" uid="uid://cs6cjstiq1uca" path="res://assets/pointer/slot-indicator.png" id="5_slot_indicator"]
-[ext_resource type="Texture2D" uid="uid://b0q0s3lmf17ej" path="res://assets/ui/shop-button.png" id="6_shop_button"]
-[ext_resource type="Texture2D" uid="uid://dxj0ujyncvexm" path="res://assets/ui/side-panel.png" id="7_upgrades_panel"]
-[ext_resource type="Texture2D" uid="uid://b8hlmw6te0uem" path="res://assets/ui/coin-badge.png" id="8_coin_badge"]
-[ext_resource type="Texture2D" uid="uid://dvxrfxhj6nld4" path="res://assets/ui/shop-close-button.png" id="10_menu_button"]
-[ext_resource type="Texture2D" uid="uid://bilhj2dhg48at" path="res://assets/ui/coin.png" id="11_coin"]
-[ext_resource type="Texture2D" uid="uid://bvjx277tacrt" path="res://assets/ui/prev-wheel.png" id="12_prev_wheel"]
-[ext_resource type="Texture2D" uid="uid://c4dhqtgk0mkjx" path="res://assets/ui/next-wheel.png" id="13_next_wheel"]
-[ext_resource type="Texture2D" uid="uid://b0f0754ghw6vc" path="res://assets/ui/wheel-center-medallion.png" id="14_center_medallion"]
-[ext_resource type="Texture2D" uid="uid://cba84lhpxgm17" path="res://assets/ui/skill-icons.png" id="15_skill_icons"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/pointer.tres" id="4_pointer"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/slot-indicator.tres" id="5_slot_indicator"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/shop-button.tres" id="6_shop_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/side-panel.tres" id="7_upgrades_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/coin-badge.tres" id="8_coin_badge"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/wheel-shell.tres" id="9_wheel_shell"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/shop-close-button.tres" id="10_menu_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/coin.tres" id="11_coin"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/prev-wheel.tres" id="12_prev_wheel"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/next-wheel.tres" id="13_next_wheel"]
+[ext_resource type="Texture2D" path="res://assets/ui/atlas/wheel-center-medallion.tres" id="14_center_medallion"]
+[ext_resource type="Texture2D" uid="uid://bcbmm8fi6i2py" path="res://assets/ui/game-ui-spritesheet.png" id="15_skill_icons"]
 [ext_resource type="AudioStream" uid="uid://dww3j5lunbjor" path="res://assets/sounds/result-positive.wav" id="16_result_positive"]
 [ext_resource type="AudioStream" uid="uid://dhnubbnoh2hhu" path="res://assets/sounds/result-negative.wav" id="17_result_negative"]
 [ext_resource type="AudioStream" uid="uid://cuprwswjcuyh4" path="res://assets/sounds/multiplier.wav" id="18_multiplier"]
@@ -79,6 +80,7 @@ anchor_bottom = 0.875
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_wheel")
+wheel_shell_texture = ExtResource("9_wheel_shell")
 center_medallion_texture = ExtResource("14_center_medallion")
 
 [node name="PointerArrow" type="TextureRect" parent="Wheel" unique_id=843815254]
@@ -116,7 +118,9 @@ offset_left = 379.0
 offset_top = 228.0
 offset_right = 519.0
 offset_bottom = 256.0
-theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 20
 text = "◎ 1 / 10"
 horizontal_alignment = 1
@@ -128,7 +132,9 @@ offset_left = 379.0
 offset_top = 284.0
 offset_right = 519.0
 offset_bottom = 312.0
-theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 20
 text = "◆ FREE"
 horizontal_alignment = 1
@@ -227,10 +233,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 70.0
-offset_top = 62.0
-offset_right = -72.0
-offset_bottom = -58.0
+offset_left = 50.0
+offset_top = 30.0
+offset_right = -52.0
+offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10

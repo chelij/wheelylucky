@@ -10,7 +10,27 @@ const WheelConfig = preload("res://scripts/wheel_config.gd")
 const SkillEffects = preload("res://scripts/skill_effects.gd")
 const UiFormat = preload("res://scripts/ui_format.gd")
 
+@export_group("Wheel Art")
+@export var wheel_shell_texture: Texture2D
 @export var center_medallion_texture: Texture2D
+@export var wheel_shell_size: Vector2 = Vector2(590.0, 590.0)
+
+@export_group("Wheel Palette")
+@export var shell_outer_fill_color: Color = Color(0.18, 0.035, 0.035, 0.98)
+@export var shell_outer_gold_color: Color = Color(1.0, 0.75, 0.18, 0.88)
+@export var shell_outer_accent_color: Color = Color(0.9, 0.16, 0.04, 0.9)
+@export var separator_color: Color = Color(1.0, 0.82, 0.24, 0.92)
+@export var shell_mid_dark_color: Color = Color(0.35, 0.08, 0.04, 1.0)
+@export var shell_mid_gold_color: Color = Color(1.0, 0.82, 0.24, 1.0)
+@export var shell_mid_highlight_color: Color = Color(1.0, 0.95, 0.48, 1.0)
+@export var shell_inner_stroke_color: Color = Color(0.45, 0.21, 0.02, 1.0)
+@export var progress_dark_color: Color = Color(0.12, 0.03, 0.025, 0.92)
+@export var progress_gold_color: Color = Color(1.0, 0.76, 0.18, 0.92)
+@export var progress_accent_color: Color = Color(0.88, 0.18, 0.04, 0.72)
+@export var progress_highlight_color: Color = Color(1.0, 0.92, 0.42, 0.55)
+@export var fallback_medallion_fill_color: Color = Color(0.12, 0.035, 0.07, 0.92)
+@export var label_shadow_color: Color = Color(0.05, 0.015, 0.01, 0.82)
+@export var label_text_color: Color = Color(1.0, 0.98, 0.9, 0.98)
 
 const IDX_LABEL = 0
 const IDX_OP = 1
@@ -491,27 +511,31 @@ func _draw():
 	var rotation_rad = deg_to_rad(current_rotation)
 
 	_draw_alpha_gradient_shadow(center, outer_radius + 10.0, 28.0, 0.13, 10, Vector2(0, 4))
+	if wheel_shell_texture != null:
+		var shell_rect := Rect2(center - wheel_shell_size / 2.0, wheel_shell_size)
+		draw_texture_rect(wheel_shell_texture, shell_rect, false)
+	else:
+		draw_set_transform(center, rotation_rad, Vector2.ONE)
+		draw_circle(Vector2.ZERO, outer_radius + 26.0, shell_outer_fill_color)
+		draw_arc(Vector2.ZERO, outer_radius + 31.0, 0.0, TAU, 180, shell_outer_gold_color, 5.0)
+		draw_arc(Vector2.ZERO, outer_radius + 18.0, 0.0, TAU, 180, shell_outer_accent_color, 4.0)
 	draw_set_transform(center, rotation_rad, Vector2.ONE)
-	draw_circle(Vector2.ZERO, outer_radius + 26.0, Color(0.18, 0.035, 0.035, 0.98))
-	draw_arc(Vector2.ZERO, outer_radius + 31.0, 0.0, TAU, 180, Color(1.0, 0.75, 0.18, 0.88), 5.0)
-	draw_arc(Vector2.ZERO, outer_radius + 18.0, 0.0, TAU, 180, Color(0.9, 0.16, 0.04, 0.9), 4.0)
-
 	for index in range(cached_section_polygons.size()):
 		draw_colored_polygon(cached_section_polygons[index], cached_section_colors[index])
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	var separator_color = Color(1.0, 0.82, 0.24, 0.92)
 	for edge_angle_base in cached_section_edges:
 		var edge_angle: float = rotation_rad + float(edge_angle_base)
 		if _is_pointer_side_edge(fposmod(edge_angle, TAU)):
 			continue
 		draw_line(center, center + Vector2(cos(edge_angle), sin(edge_angle)) * outer_radius, separator_color, 1.0, true)
 
-	draw_arc(center, outer_radius + 10.0, 0.0, TAU, 160, Color(0.35, 0.08, 0.04), 22.0)
-	draw_arc(center, outer_radius + 14.0, 0.0, TAU, 160, Color(1.0, 0.82, 0.24), 5.0)
-	draw_arc(center, outer_radius + 2.0, 0.0, TAU, 160, Color(1.0, 0.95, 0.48), 4.0)
-	_draw_alpha_gradient_arc_shadow(center, outer_radius - 3.0, 18.0, 0.14, 8, 10.0)
-	draw_arc(center, outer_radius, 0.0, TAU, 160, Color(0.45, 0.21, 0.02), 2.2)
+	if wheel_shell_texture == null:
+		draw_arc(center, outer_radius + 10.0, 0.0, TAU, 160, shell_mid_dark_color, 22.0)
+		draw_arc(center, outer_radius + 14.0, 0.0, TAU, 160, shell_mid_gold_color, 5.0)
+		draw_arc(center, outer_radius + 2.0, 0.0, TAU, 160, shell_mid_highlight_color, 4.0)
+		_draw_alpha_gradient_arc_shadow(center, outer_radius - 3.0, 18.0, 0.14, 8, 10.0)
+		draw_arc(center, outer_radius, 0.0, TAU, 160, shell_inner_stroke_color, 2.2)
 	_draw_segment_labels(center, rotation_rad)
 	_draw_center_medallion(center, hub_radius)
 	_draw_wheel_progress()
@@ -523,7 +547,7 @@ func _draw_center_medallion(center: Vector2, hub_radius: float) -> void:
 	if center_medallion_texture != null:
 		draw_texture_rect(center_medallion_texture, rect, false)
 	else:
-		draw_circle(center, hub_radius, Color(0.12, 0.035, 0.07, 0.92))
+		draw_circle(center, hub_radius, fallback_medallion_fill_color)
 
 func _draw_alpha_gradient_shadow(center: Vector2, base_radius: float, spread: float, max_alpha: float, rings: int, offset: Vector2 = Vector2.ZERO) -> void:
 	var ring_count = max(2, rings)
@@ -568,8 +592,8 @@ func _draw_segment_labels(center: Vector2, rotation_rad: float) -> void:
 func _draw_segment_text_line(font: Font, text: String, font_size: int, y_offset: float) -> void:
 	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 	var origin := Vector2(-width * 0.5, y_offset)
-	draw_string(font, origin + Vector2(2.0, 2.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, Color(0.05, 0.015, 0.01, 0.82))
-	draw_string(font, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, Color(1.0, 0.98, 0.9, 0.98))
+	draw_string(font, origin + Vector2(2.0, 2.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, label_shadow_color)
+	draw_string(font, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, label_text_color)
 
 func _build_label_sections(wheel_slots: Array) -> Array:
 	var sections: Array = []
@@ -608,10 +632,10 @@ func _draw_wheel_progress() -> void:
 	var radius = 268.0
 	var start_angle = deg_to_rad(214.0)
 	var end_angle = deg_to_rad(326.0)
-	draw_arc(center, radius + 4.0, start_angle, end_angle, 84, Color(0.12, 0.03, 0.025, 0.92), 10.0, true)
-	draw_arc(center, radius + 8.0, start_angle, end_angle, 84, Color(1.0, 0.76, 0.18, 0.92), 3.0, true)
-	draw_arc(center, radius - 2.0, start_angle, end_angle, 84, Color(0.88, 0.18, 0.04, 0.72), 3.0, true)
-	draw_arc(center, radius - 10.0, start_angle, end_angle, 84, Color(1.0, 0.92, 0.42, 0.55), 1.4, true)
+	draw_arc(center, radius + 4.0, start_angle, end_angle, 84, progress_dark_color, 10.0, true)
+	draw_arc(center, radius + 8.0, start_angle, end_angle, 84, progress_gold_color, 3.0, true)
+	draw_arc(center, radius - 2.0, start_angle, end_angle, 84, progress_accent_color, 3.0, true)
+	draw_arc(center, radius - 10.0, start_angle, end_angle, 84, progress_highlight_color, 1.4, true)
 
 	for wheel_num in range(1, Game.MAX_WHEELS + 1):
 		var t = float(wheel_num - 1) / float(Game.MAX_WHEELS - 1)
