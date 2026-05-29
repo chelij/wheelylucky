@@ -113,6 +113,8 @@ func _notification(what: int) -> void:
 		_recompute_pointer_base_angle()
 
 func _recompute_pointer_base_angle() -> void:
+	if pointer_arrow == null:
+		return
 	var p_center = pointer_arrow.position + pointer_arrow.size / 2.0
 	pointer_base_angle_degrees = rad_to_deg(atan2(p_center.y - size.y * 0.5, p_center.x - size.x * 0.5))
 
@@ -549,7 +551,7 @@ func _draw():
 		var edge_angle: float = rotation_rad + float(edge_angle_base)
 		if _is_pointer_side_edge(fposmod(edge_angle, TAU)):
 			continue
-		draw_line(center, center + Vector2(cos(edge_angle), sin(edge_angle)) * outer_radius, separator_color, 1.0, true)
+		draw_line(center + Vector2(cos(edge_angle), sin(edge_angle)) * hub_radius, center + Vector2(cos(edge_angle), sin(edge_angle)) * outer_radius, separator_color, 1.0, true)
 
 	if wheel_shell == null or wheel_shell.texture == null:
 		draw_arc(center, outer_radius + 10.0, 0.0, TAU, 160, shell_mid_dark_color, 22.0)
@@ -558,7 +560,6 @@ func _draw():
 		_draw_alpha_gradient_arc_shadow(center, outer_radius - 3.0, 18.0, 0.14, 8, 10.0)
 		draw_arc(center, outer_radius, 0.0, TAU, 160, shell_inner_stroke_color, 2.2)
 	_draw_segment_labels(center, rotation_rad)
-	_draw_alpha_gradient_shadow(center, hub_radius * 1.04, 22.0, 0.15, 9, Vector2(0, 3))
 	_draw_wheel_progress()
 
 func _get_texture_size(texture: Texture2D) -> Vector2:

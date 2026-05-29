@@ -1251,9 +1251,14 @@ func _set_viewport_focus_zoom_custom(amount: float, focus: Vector2, max_zoom: fl
 func _get_next_wheel_arc_focus(target_wheel: int) -> Vector2:
 	var scale_factor: float = wheel_node.size.y / 560.0
 	var center := wheel_node.global_position + wheel_node.size * 0.5
-	var radius := 278.0 * scale_factor
+	# Must match _draw_wheel_progress in wheel.gd: radius = outer_radius + arc_offset_pixels
+	var outer_radius: float = wheel_node.size.x * 0.25
+	if wheel_node.has_method("_get_outer_radius"):
+		outer_radius = wheel_node.call("_get_outer_radius")
+	var arc_offset: float = wheel_node.arc_offset_pixels
+	var radius := (outer_radius + arc_offset) * scale_factor
 	var ratio: float = clamp(float(target_wheel - 1) / float(Game.MAX_WHEELS - 1), 0.0, 1.0)
-	var angle: float = lerp(deg_to_rad(210.0), deg_to_rad(330.0), ratio)
+	var angle: float = lerp(deg_to_rad(220.0), deg_to_rad(320.0), ratio)
 	return center + Vector2(cos(angle), sin(angle)) * radius
 
 func _pulse_wheel_indicator(target_wheel: int = 0) -> void:

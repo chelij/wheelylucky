@@ -102,13 +102,102 @@ func _configure_card(card: PanelContainer, skill: Dictionary, level: int, cost: 
 	icon.texture = _get_skill_icon(skill["id"])
 	name_label.text = str(skill["name"])
 	description_label.text = _get_purchase_effect_text(skill, level)
+	var content_node := card.get_node("Content") as Control
+
 	bought_overlay.visible = bought
+	if bought:
+		bought_overlay.position = Vector2(
+			buy_button.position.x + (content_node.position.x if content_node else 18.0),
+			buy_button.position.y + (content_node.position.y if content_node else 18.0)
+		)
+		bought_overlay.size = buy_button.size
+		bought_overlay.set_anchors_preset(Control.PRESET_TOP_LEFT)
+
+	# Clean up any previous overlay decorations
+	for child in card.get_children():
+		if child.name.begins_with("_CardOverlay"):
+			child.queue_free()
+	if content_node:
+		for child in content_node.get_children():
+			if child.name.begins_with("_CardOverlay"):
+				child.queue_free()
+			if child.name == "_CardOverlay_buy_darken":
+				child.queue_free()
+	if buy_button != null:
+		for child in buy_button.get_children():
+			if child.name == "_CardOverlay_buy_darken":
+				child.queue_free()
+
+	# Dark overlay on the buy button when can't afford
+	if not bought:
+		if not can_afford:
+			var buy_darken := Panel.new()
+			buy_darken.name = "_CardOverlay_buy_darken"
+			buy_darken.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var dark_style := StyleBoxFlat.new()
+			dark_style.bg_color = Color(0.0, 0.0, 0.0, 0.55)
+			dark_style.set_corner_radius_all(4)
+			buy_darken.add_theme_stylebox_override("panel", dark_style)
+			buy_darken.position = Vector2.ZERO
+			buy_darken.size = buy_button.size
+			buy_button.add_child(buy_darken)
+
+	# Unique skills get a smooth rotating gold glow
+	var is_unique := int(skill.get("max", 0)) == 0
+	if is_unique:
+		call_deferred("_spawn_card_glow", card)
 
 	buy_button.text = ""
 	buy_button.disabled = not can_afford
 	buy_button.focus_mode = Control.FOCUS_ALL if can_afford else Control.FOCUS_NONE
-	buy_content.visible = not bought
+	buy_content.visible = true
 	buy_text_label.text = UiFormat.compact_number(cost)
+
+	# Wire hover/press effect like continue button
+	buy_button.set_meta("can_afford", can_afford)
+	if not buy_button.has_meta("_hover_wired"):
+		buy_button.set_meta("_hover_wired", true)
+		buy_button.mouse_entered.connect(_on_buy_button_state_changed.bind(buy_button))
+		buy_button.mouse_exited.connect(_on_buy_button_state_changed.bind(buy_button))
+		buy_button.button_down.connect(_on_buy_button_state_changed.bind(buy_button))
+		buy_button.button_up.connect(_on_buy_button_state_changed.bind(buy_button))
+	_update_buy_button_state(buy_button)
+
+func _spawn_card_glow(card: PanelContainer) -> void:
+	if not is_instance_valid(card):
+		return
+	var content := card.get_node("Content") as Control
+	if content == null:
+		return
+
+	var overlay := Control.new()
+	overlay.name = "_CardOverlay_glow"
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.size = card.size
+	overlay.position = Vector2(-content.position.x, -content.position.y)
+	overlay.set_script(preload("res://scripts/card_glow.gd"))
+	content.add_child(overlay)
+
+	create_tween().set_loops().tween_method(func(p: float): overlay.phase = p; overlay.queue_redraw(), 0.0, 1.0, 3.0)
+
+func _on_buy_button_state_changed(button: Button) -> void:
+	_update_buy_button_state(button)
+
+func _update_buy_button_state(button: Button) -> void:
+	if not is_instance_valid(button):
+		return
+	var can_afford := bool(button.get_meta("can_afford", false))
+	var hovered := button.get_global_rect().has_point(button.get_global_mouse_position())
+	var pressed := button.button_pressed
+
+	if not can_afford or button.disabled:
+		button.self_modulate = Color(0.72, 0.68, 0.64, 0.85)
+	elif pressed:
+		button.self_modulate = Color(0.82, 0.76, 0.62, 1)
+	elif hovered:
+		button.self_modulate = Color(1.08, 1.05, 1.0, 1)
+	else:
+		button.self_modulate = Color.WHITE
 
 func _on_card_buy_pressed(card: PanelContainer) -> void:
 	if not card.has_meta("skill"):

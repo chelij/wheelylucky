@@ -284,7 +284,7 @@ func _build_ordered_skill_coin_events(outcome, base_events: Array[Dictionary]) -
 
 	for skill_id in bought_skill_order:
 		if pending_by_id.has(skill_id):
-			var event := pending_by_id[skill_id]
+			var event: Dictionary = pending_by_id[skill_id]
 			ordered.append(event)
 			temp_total += int(event.get("delta", 0))
 			pending_by_id.erase(skill_id)

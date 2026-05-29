@@ -344,3 +344,33 @@ Any early return between `suppress_coin_changed = true` and `flush_coin_changed(
 | A4 | `game.gd`, `wheel.gd` | Removed duplicate `IDX_*` consts, uses `WheelConfig` |
 | A5 | 5 files | Added `## Static utility` doc comments |
 | R1 | `game.gd` | Removed redundant `as Dictionary` cast |
+
+---
+
+## 🔴 Regressions Introduced by Fixes
+
+Two of the applied fixes introduced bugs that were caught in post-audit testing.
+
+### X1. `game.gd:287` — R1 fix broke type inference
+
+```gdscript
+var event := pending_by_id[skill_id]   # was: var event := pending_by_id[skill_id] as Dictionary
+```
+
+Removing `as Dictionary` while keeping `:=` left GDScript unable to infer the type, since `Dictionary[key]` returns a Variant. Produced error:
+> Cannot infer the type of "event" variable because the value doesn't have a set type.
+
+**✅ Fixed:** Changed to `var event: Dictionary = pending_by_id[skill_id]`.
+
+---
+
+### X2. `wheel.gd:116` — B5 fix added `_recompute_pointer_base_angle()` without null guard
+
+The new function reads `pointer_arrow.position` but is called from `NOTIFICATION_RESIZED`, which can fire at unexpected lifecycle points (e.g., during initial scene layout before `_ready()` finishes). Unlike the sibling function `_update_pointer_visual()` (line 475), it had no null guard. Produced error:
+> Invalid access to property or key 'position' on a base object of type 'Nil'.
+
+**✅ Fixed:** Added `if pointer_arrow == null: return` at the top of `_recompute_pointer_base_angle()`.
+
+---
+
+**Lesson:** Both regressions were preventable — `@onready` node references should always be null-guarded when accessed from engine callbacks (`_notification`, `_draw`, signal handlers) that can fire before or after the normal lifecycle, and type annotations should use `var name: Type = value` instead of `:=` when the inferred type is ambiguous.
