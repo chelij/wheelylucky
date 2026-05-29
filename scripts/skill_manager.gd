@@ -1,4 +1,5 @@
 # scripts/skill_manager.gd
+## Static utility — do not instantiate.
 extends RefCounted
 
 const SkillEffects = preload("res://scripts/skill_effects.gd")

@@ -1,3 +1,4 @@
+## Static utility — do not instantiate.
 extends RefCounted
 
 const UiSprites = preload("res://scripts/ui_sprites.gd")
@@ -76,6 +77,14 @@ static func skill_icon(skill_id: String, icon_atlas: Texture2D) -> AtlasTexture:
 	else:
 		atlas.region = UiSprites.skill_icon_region(index)
 	return atlas
+
+static func format_elapsed(total_seconds: int) -> String:
+	var seconds := total_seconds % 60
+	var minutes := int(total_seconds / 60) % 60
+	var hours := int(total_seconds / 3600)
+	if hours > 0:
+		return "%02d:%02d:%02d" % [hours, minutes, seconds]
+	return "%02d:%02d" % [minutes, seconds]
 
 static func _trim_decimal(value: float, decimals: int) -> String:
 	if decimals <= 0:

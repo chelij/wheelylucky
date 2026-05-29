@@ -58,8 +58,9 @@ func get_games_won() -> int:
 	return config.get_value("stats", "games_won", 0)
 
 func increment_games_won() -> void:
-	config.set_value("stats", "games_won", get_games_won() + 1)
-	config.set_value("game", "games_played", get_games_won())
+	var new_won = get_games_won() + 1
+	config.set_value("stats", "games_won", new_won)
+	config.set_value("game", "games_played", new_won)
 	_save()
 
 func get_total_spins() -> int:

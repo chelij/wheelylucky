@@ -1,3 +1,4 @@
+## Static utility — do not instantiate.
 extends RefCounted
 
 const SHEET: Texture2D = preload("res://assets/ui/game-ui-spritesheet.png")

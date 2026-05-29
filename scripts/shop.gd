@@ -127,9 +127,7 @@ func _on_buy(skill: Dictionary):
 		_request_populate_skills()
 
 func _get_discounted_cost(skill: Dictionary, level: int) -> int:
-	var base_cost = SkillManager.get_purchase_cost(skill, level)
-	var savvy_level = Game.skill_levels.get("shop_savvy", 0)
-	return max(1, int(round(float(base_cost) * max(0.0, 1.0 - SkillEffects.SHOP_SAVVY_PRICE_DISCOUNT_PER_LEVEL * savvy_level))))
+	return Game._get_discounted_shop_cost(skill, level)
 
 func _get_purchase_effect_text(skill: Dictionary, current_level: int) -> String:
 	return SkillManager.get_effect_text(skill["id"], current_level)

@@ -112,6 +112,9 @@ func _exit_tree() -> void:
 		if player != null:
 			player.stop()
 			player.stream = null
+	# Reset viewport transform in case _play_w10_loss_focus tween was killed mid-flight.
+	if is_inside_tree():
+		get_viewport().canvas_transform = Transform2D()
 
 func _make_non_buttons_click_through(node: Node):
 	# Let clicks fall through decorative UI panels so the wheel can be clicked anywhere.
@@ -289,12 +292,7 @@ func _volume_to_db(value: float) -> float:
 	return linear_to_db(clamp(value, 0.0, 1.0))
 
 func _format_elapsed(total_seconds: int) -> String:
-	var seconds := total_seconds % 60
-	var minutes := int(total_seconds / 60) % 60
-	var hours := int(total_seconds / 3600)
-	if hours > 0:
-		return "%02d:%02d:%02d" % [hours, minutes, seconds]
-	return "%02d:%02d" % [minutes, seconds]
+	return UiFormat.format_elapsed(total_seconds)
 
 func _set_game_ui_visible(is_visible: bool) -> void:
 	wheel_node.visible = is_visible
@@ -1115,9 +1113,13 @@ func _on_spin_finished(outcome):
 	
 	if result.get("success", false):
 		await _play_result_polish(result)
+		if not is_instance_valid(self):
+			return
 		if wheel_node != null and wheel_node.has_method("set_spin_locked"):
 			wheel_node.call("set_spin_locked", true)
 		await _play_resolution_events(result.get("resolution_events", []))
+		if not is_instance_valid(self):
+			return
 		Game.flush_coin_changed()
 		if not Game.is_wheel_unlocked(Game.selected_wheel):
 			Game.select_wheel(Game.get_highest_affordable_wheel())
@@ -1129,9 +1131,13 @@ func _on_spin_finished(outcome):
 		last_highest_affordable_wheel = highest
 		wheel_node.set_all_buttons_visible(true)
 		await get_tree().process_frame
+		if not is_instance_valid(self):
+			return
 		wheel_node._update_wheel_arrow_buttons()
 		if bool(result.get("game_over", false)):
 			await get_tree().create_timer(0.6 if not reduced_motion_enabled else 0.18).timeout
+			if not is_instance_valid(self):
+				return
 			_on_game_ended(Game.coins, Game.get_elapsed_seconds())
 	else:
 		wheel_node.set_all_buttons_visible(true)
@@ -1319,6 +1325,8 @@ func _play_resolution_events(events: Array) -> void:
 		var delta := int(event.get("delta", 0))
 		if delta == 0:
 			continue
+		if not is_instance_valid(self):
+			return
 		if str(event.get("type", "")) == "base":
 			_show_coin_delta(
 				delta,
@@ -1328,6 +1336,8 @@ func _play_resolution_events(events: Array) -> void:
 			)
 			_set_displayed_coin_total(int(event.get("display_total", Game.coins)))
 			await get_tree().create_timer(0.62).timeout
+			if not is_instance_valid(self):
+				return
 			continue
 		await _show_skill_coin_delta(
 			str(event.get("skill_id", "")),
@@ -1335,9 +1345,13 @@ func _play_resolution_events(events: Array) -> void:
 			str(event.get("skill_name", "")),
 			int(event.get("display_total", Game.coins))
 		)
+		if not is_instance_valid(self):
+			return
 		await get_tree().create_timer(0.24).timeout
 
 func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String, display_total: int) -> void:
+	if not is_instance_valid(self):
+		return
 	var frame = skill_icon_frames.get(skill_id)
 	if frame == null or not is_instance_valid(frame):
 		_show_coin_delta(delta, Color(1.0, 0.84, 0.24, 1), "", 0)
@@ -1391,6 +1405,8 @@ func _show_skill_coin_delta(skill_id: String, delta: int, _skill_name: String, d
 			glow.queue_free()
 	)
 	await tween.finished
+	if not is_instance_valid(self):
+		return
 
 func _set_displayed_coin_total(total: int) -> void:
 	if coins_display != null:

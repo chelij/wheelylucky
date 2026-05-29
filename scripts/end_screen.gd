@@ -121,7 +121,7 @@ func _outcome_row_color(color_key: String) -> Color:
 func _populate_build_grid() -> void:
 	for child in build_grid.get_children():
 		child.queue_free()
-	var bought := _get_bought_skills()
+	var bought := Game._get_owned_skill_summaries()
 	empty_build_label.visible = bought.is_empty()
 	build_grid.visible = not bought.is_empty()
 	for item in bought:
@@ -149,34 +149,14 @@ func _make_skill_chip(item: Dictionary) -> Button:
 	button.add_child(badge)
 	return button
 
-func _get_bought_skills() -> Array[Dictionary]:
-	var items: Array[Dictionary] = []
-	for skill_id in Game.bought_skill_order:
-		var skill := SkillManager.get_skill_by_id(skill_id)
-		if skill.is_empty():
-			continue
-		var is_unique := skill_id in Game.unique_skills
-		var level := 1 if is_unique else int(Game.skill_levels.get(skill_id, 0))
-		if level > 0:
-			items.append({"id": skill_id, "name": skill.get("name", skill_id), "level": level, "unique": is_unique})
-	return items
-
 func _get_skill_purchase_count() -> int:
-	var total := 0
-	for skill_id in Game.bought_skill_order:
-		total += 1 if skill_id in Game.unique_skills else int(Game.skill_levels.get(skill_id, 0))
-	return total
+	return Game._get_skill_purchase_count()
 
 func _get_skill_icon(skill_id: String) -> Texture2D:
 	return UiFormat.skill_icon(skill_id, skill_icon_atlas)
 
 func _format_elapsed(total_seconds: int) -> String:
-	var seconds := total_seconds % 60
-	var minutes := int(total_seconds / 60) % 60
-	var hours := int(total_seconds / 3600)
-	if hours > 0:
-		return "%02d:%02d:%02d" % [hours, minutes, seconds]
-	return "%02d:%02d" % [minutes, seconds]
+	return UiFormat.format_elapsed(total_seconds)
 
 func _make_skill_style(fill: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

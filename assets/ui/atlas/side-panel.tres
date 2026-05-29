@@ -1,6 +1,6 @@
-[gd_resource type="AtlasTexture" format=3]
+[gd_resource type="AtlasTexture" format=3 uid="uid://oqeb236dj1sg"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/game-ui-spritesheet.png" id="1_sheet"]
+[ext_resource type="Texture2D" uid="uid://bcbmm8fi6i2py" path="res://assets/ui/game-ui-spritesheet.png" id="1_sheet"]
 
 [resource]
 atlas = ExtResource("1_sheet")

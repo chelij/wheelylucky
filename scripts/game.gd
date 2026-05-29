@@ -13,11 +13,6 @@ signal shop_available_changed(is_available)
 signal skills_changed
 signal game_ended(final_coins, elapsed_seconds)
 
-const IDX_LABEL = 0
-const IDX_OP = 1
-const IDX_VALUE = 2
-const IDX_SLOTS = 3
-const IDX_COLOR = 4
 
 var coins: int = 0:
 	set(value):
@@ -33,6 +28,7 @@ var cycle_count: int = 1
 var shop_available: bool = false
 var pending_shop_skills: Array[Dictionary] = []
 var last_spin_cost: int = 0
+var _current_spin_wheel: int = 0
 var shop_miss_count: int = 0
 var momentum_stacks: int = 0
 const MAX_WHEELS: int = 10
@@ -150,6 +146,7 @@ func begin_spin() -> Dictionary:
 
 	coins -= cost
 	last_spin_cost = cost
+	_current_spin_wheel = wheel_num
 	total_spins += 1
 	run_coins_spent += cost
 	run_spin_costs += cost
@@ -158,7 +155,7 @@ func begin_spin() -> Dictionary:
 	return {"success": true, "wheel_num": wheel_num, "cost": cost}
 
 func spin_wheel(pre_chosen_outcome = null):
-	var wheel_num = selected_wheel
+	var wheel_num = _current_spin_wheel if _current_spin_wheel > 0 else selected_wheel
 	var coins_before_base := coins
 
 	# Use the pre-determined visual outcome so pointer matches result
@@ -198,13 +195,13 @@ func _build_post_outcome_coin_events(outcome, base_delta: int) -> Array[Dictiona
 	if outcome == null:
 		return events
 
-	if outcome[IDX_OP] == WheelConfig.OP_ADD:
+	if outcome[WheelConfig.IDX_OP] == WheelConfig.OP_ADD:
 		var magnet_level := int(skill_levels.get("coin_magnet", 0))
 		if magnet_level > 0 and base_delta > 0:
 			var amount := int(round(float(base_delta) * SkillEffects.COIN_MAGNET_ADD_VALUE_PER_LEVEL * magnet_level))
 			_add_skill_coin_event(events, "coin_magnet", amount)
 
-	if outcome[IDX_OP] == WheelConfig.OP_MULTIPLY:
+	if outcome[WheelConfig.IDX_OP] == WheelConfig.OP_MULTIPLY:
 		var sharp_level := int(skill_levels.get("sharp_mind", 0))
 		if sharp_level > 0 and base_delta > 0:
 			var amount := int(round(float(base_delta) * SkillEffects.SHARP_MIND_MULTIPLY_VALUE_PER_LEVEL * sharp_level))
@@ -223,7 +220,9 @@ func _add_skill_coin_event(events: Array[Dictionary], skill_id: String, amount: 
 	})
 
 func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = [], coins_before_base: int = 0) -> Dictionary:
-	var spun_wheel = selected_wheel
+	if outcome == null:
+		return {"success": false, "reason": "null_outcome"}
+	var spun_wheel = _current_spin_wheel if _current_spin_wheel > 0 else selected_wheel
 	suppress_coin_changed = true
 	var ordered_coin_events := _build_ordered_skill_coin_events(outcome, coin_events)
 	_apply_coin_events_to_state(ordered_coin_events)
@@ -232,7 +231,7 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = [], coin
 	var game_over = false
 	var is_jackpot = false
 	if spun_wheel == MAX_WHEELS:
-		if outcome[IDX_LABEL] == "JACKPOT":
+		if outcome[WheelConfig.IDX_LABEL] == "JACKPOT":
 			game_over = true
 			is_jackpot = true
 
@@ -261,8 +260,8 @@ func _finish_spin(outcome, delta: int, coin_events: Array[Dictionary] = [], coin
 	return {
 		"success": true,
 		"delta": delta,
-		"outcome_label": outcome[IDX_LABEL],
-		"outcome_color": outcome[IDX_COLOR],
+		"outcome_label": outcome[WheelConfig.IDX_LABEL],
+		"outcome_color": outcome[WheelConfig.IDX_COLOR],
 		"spun_wheel": spun_wheel,
 		"show_shop": shop_available,
 		"game_over": game_over,
@@ -285,7 +284,7 @@ func _build_ordered_skill_coin_events(outcome, base_events: Array[Dictionary]) -
 
 	for skill_id in bought_skill_order:
 		if pending_by_id.has(skill_id):
-			var event := pending_by_id[skill_id] as Dictionary
+			var event := pending_by_id[skill_id]
 			ordered.append(event)
 			temp_total += int(event.get("delta", 0))
 			pending_by_id.erase(skill_id)
@@ -337,8 +336,8 @@ func _build_resolution_events(outcome, delta: int, coins_before_base: int, coin_
 			"type": "base",
 			"delta": delta,
 			"display_total": display_total,
-			"outcome_label": outcome[IDX_LABEL],
-			"outcome_color": outcome[IDX_COLOR],
+			"outcome_label": outcome[WheelConfig.IDX_LABEL],
+			"outcome_color": outcome[WheelConfig.IDX_COLOR],
 			"spun_wheel": selected_wheel,
 		})
 	for event in coin_events:
@@ -369,17 +368,17 @@ func flush_coin_changed() -> void:
 func _update_momentum(outcome) -> void:
 	if "momentum" not in unique_skills:
 		return
-	if outcome[IDX_OP] == WheelConfig.OP_ADD:
+	if outcome[WheelConfig.IDX_OP] == WheelConfig.OP_ADD:
 		var max_stacks := int(SkillEffects.MOMENTUM_MAX_BONUS_SLOTS / SkillEffects.MOMENTUM_POSITIVE_SLOTS_PER_STACK)
 		momentum_stacks = min(
 			max_stacks,
 			momentum_stacks + 1
 		)
-	elif outcome[IDX_OP] == WheelConfig.OP_SUBTRACT:
+	elif outcome[WheelConfig.IDX_OP] == WheelConfig.OP_SUBTRACT:
 		momentum_stacks = 0
 
 func _apply_free_gift(outcome) -> int:
-	if outcome[IDX_OP] not in [WheelConfig.OP_NONE, WheelConfig.OP_SUBTRACT] or outcome[IDX_LABEL] == "JACKPOT":
+	if outcome[WheelConfig.IDX_OP] not in [WheelConfig.OP_NONE, WheelConfig.OP_SUBTRACT] or outcome[WheelConfig.IDX_LABEL] == "JACKPOT":
 		return 0
 	var free_gift = skill_levels.get("free_gift", 0)
 	if free_gift <= 0:
@@ -393,9 +392,9 @@ func _record_spin_color(outcome) -> void:
 	SaveManager.add_spin(color_key)
 
 func get_color_key_for_outcome(outcome) -> String:
-	if outcome[IDX_LABEL] == "JACKPOT":
+	if outcome[WheelConfig.IDX_LABEL] == "JACKPOT":
 		return "jackpot"
-	match outcome[IDX_OP]:
+	match outcome[WheelConfig.IDX_OP]:
 		WheelConfig.OP_ADD:
 			return "green"
 		WheelConfig.OP_SUBTRACT:

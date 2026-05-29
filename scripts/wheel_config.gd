@@ -1,4 +1,5 @@
 # scripts/wheel_config.gd
+## Static utility — do not instantiate.
 extends RefCounted
 
 const SkillEffects = preload("res://scripts/skill_effects.gd")
@@ -303,6 +304,8 @@ static func _format_number(value: float) -> String:
 # ── Weighted random — works with slot counts ───────────────────
 
 static func weighted_random(outcomes):
+	if outcomes.is_empty():
+		return null
 	var total_weight = 0.0
 	for o in outcomes:
 		total_weight += float(o[IDX_SLOTS])

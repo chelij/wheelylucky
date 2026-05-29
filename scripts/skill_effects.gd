@@ -1,4 +1,5 @@
 # scripts/skill_effects.gd
+## Static utility — do not instantiate.
 extends RefCounted
 
 # Skill balance index. Edit these values to tune skill effects.
